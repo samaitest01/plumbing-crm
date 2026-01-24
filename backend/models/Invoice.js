@@ -19,6 +19,21 @@ const InvoiceSchema = new mongoose.Schema({
 
   subTotal: Number,
   total: Number,
+  
+  // Payment fields
+  paymentStatus: { 
+    type: String, 
+    enum: ["Paid", "Balance"], 
+    default: "Balance" 
+  },
+  paymentMode: {
+    type: String,
+    enum: ["Cash", "UPI", "Card", "Other", ""],
+    default: ""
+  },
+  paymentDate: { type: Date },
+  amountPaid: { type: Number, default: 0 },
+  balanceDue: { type: Number, default: 0 },
 
   createdAt: { type: Date, default: Date.now }
 });

@@ -33,6 +33,11 @@ export default function CreateInvoice() {
   // 🔑 INVOICE META
   const [invoiceId, setInvoiceId] = useState(null);
   const [invoiceDate, setInvoiceDate] = useState(null);
+  
+  // 💳 PAYMENT FIELDS
+  const [paymentStatus, setPaymentStatus] = useState("Balance");
+  const [paymentMode, setPaymentMode] = useState("");
+  const [amountPaid, setAmountPaid] = useState(0);
 
   useEffect(() => {
     fetchAllProducts().then(r => setSystems(r.data || []));
@@ -160,7 +165,11 @@ export default function CreateInvoice() {
         customerMobile,
         items,
         subTotal: totalPrice,
-        total: totalAmount
+        total: totalAmount,
+        paymentStatus,
+        paymentMode,
+        amountPaid: paymentStatus === "Paid" ? totalAmount : Number(amountPaid) || 0,
+        balanceDue: paymentStatus === "Paid" ? 0 : totalAmount - (Number(amountPaid) || 0)
       });
 
       setInvoiceId(res.data._id);
@@ -251,6 +260,44 @@ export default function CreateInvoice() {
           }}
           className="form-input"
         />
+      </div>
+
+      <hr />
+
+      {/* PAYMENT SECTION */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem", marginBottom: "1rem" }}>
+        <div>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Payment Status</label>
+          <select value={paymentStatus} onChange={e => setPaymentStatus(e.target.value)} className="form-select" style={{ width: "100%" }}>
+            <option value="Balance">Balance</option>
+            <option value="Paid">Paid</option>
+          </select>
+        </div>
+        
+        <div>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Payment Mode</label>
+          <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)} className="form-select" style={{ width: "100%" }}>
+            <option value="">-- Select Mode --</option>
+            <option value="Cash">Cash</option>
+            <option value="UPI">UPI</option>
+            <option value="Card">Card</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        {paymentStatus === "Balance" && (
+          <div>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Amount Paid</label>
+            <input 
+              type="number" 
+              value={amountPaid} 
+              onChange={e => setAmountPaid(e.target.value)}
+              placeholder="0"
+              className="form-input"
+              style={{ width: "100%" }}
+            />
+          </div>
+        )}
       </div>
 
       <hr />
