@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const InvoiceSchema = new mongoose.Schema({
+  invoiceNumber: { type: String, unique: true, sparse: true },
   customerName: String,
   customerMobile: String,
 
@@ -20,6 +21,32 @@ const InvoiceSchema = new mongoose.Schema({
   total: Number,
 
   createdAt: { type: Date, default: Date.now }
+});
+
+// Pre-save middleware to generate unique short invoice number
+InvoiceSchema.pre('save', async function() {
+  if (!this.invoiceNumber) {
+    let isUnique = false;
+    let invoiceNumber;
+    let attempts = 0;
+    
+    while (!isUnique && attempts < 10) {
+      attempts++;
+      const letters = Math.random().toString(36).substring(2, 4).toUpperCase();
+      const numbers = Math.floor(Math.random() * 999999)
+        .toString()
+        .padStart(5, '0');
+      invoiceNumber = `${letters}${numbers}`;
+      
+      // Check if invoice number already exists
+      const existing = await this.constructor.findOne({ invoiceNumber });
+      if (!existing) {
+        isUnique = true;
+      }
+    }
+    
+    this.invoiceNumber = invoiceNumber;
+  }
 });
 
 // 🔴 IMPORTANT: no custom `id` field

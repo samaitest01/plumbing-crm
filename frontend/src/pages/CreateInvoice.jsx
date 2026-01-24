@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import PageWrapper from "../components/PageWrapper";
-import { fetchAllProducts, saveInvoice } from "../services/api";
+import { fetchAllProducts, saveInvoice, fetchCustomers, createCustomer } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -17,9 +17,11 @@ export default function CreateInvoice() {
   const [systems, setSystems] = useState([]);
   const [variants, setVariants] = useState([]);
   const [items, setItems] = useState([]);
+  const [customers, setCustomers] = useState([]);
 
   const [customerName, setCustomerName] = useState("");
   const [customerMobile, setCustomerMobile] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState("");
 
   const [productId, setProductId] = useState("");
   const [productName, setProductName] = useState("");
@@ -34,6 +36,7 @@ export default function CreateInvoice() {
 
   useEffect(() => {
     fetchAllProducts().then(r => setSystems(r.data || []));
+    fetchCustomers().then(r => setCustomers(r.data || []));
   }, []);
 
   const handleProductChange = e => {
@@ -101,6 +104,21 @@ export default function CreateInvoice() {
     if (p) setVariants(p.variants);
   };
 
+
+  const handleCustomerSelect = e => {
+    const mobile = e.target.value;
+    setSelectedCustomer(mobile);
+    if (mobile) {
+      const customer = customers.find(c => c.mobile === mobile);
+      if (customer) {
+        setCustomerName(customer.name);
+        setCustomerMobile(customer.mobile);
+      }
+    } else {
+      setCustomerName("");
+      setCustomerMobile("");
+    }
+  };
   const handleDelete = id => {
     setItems(items.filter(i => i.id !== id));
   };
@@ -115,17 +133,44 @@ export default function CreateInvoice() {
       return;
     }
 
-    const res = await saveInvoice({
-      customerName,
-      customerMobile,
-      items,
-      subTotal: totalPrice,
-      total: totalAmount
-    });
+    try {
+      // Check if customer already exists
+      const customerExists = customers.some(c => c.mobile === customerMobile);
+      
+      // If customer doesn't exist, create them
+      if (!customerExists) {
+        try {
+          await createCustomer({ name: customerName, mobile: customerMobile });
+          console.log("✅ Customer created successfully");
+          // Refresh customer list
+          const updatedCustomers = await fetchCustomers();
+          setCustomers(updatedCustomers.data || []);
+        } catch (customerErr) {
+          console.error("❌ Customer creation error:", customerErr.response?.data || customerErr.message);
+          alert("Customer creation failed: " + (customerErr.response?.data?.error || customerErr.message));
+          return;
+        }
+      } else {
+        console.log("✅ Customer already exists");
+      }
 
-    setInvoiceId(res.data._id);
-    setInvoiceDate(res.data.createdAt);
-    alert("Invoice saved");
+      // Save invoice
+      const res = await saveInvoice({
+        customerName,
+        customerMobile,
+        items,
+        subTotal: totalPrice,
+        total: totalAmount
+      });
+
+      setInvoiceId(res.data._id);
+      setInvoiceDate(res.data.createdAt);
+      alert("Invoice saved successfully");
+      console.log("✅ Invoice saved:", res.data);
+    } catch (err) {
+      console.error("❌ Error saving invoice:", err.response?.data || err.message);
+      alert(err.response?.data?.error || "Failed to save invoice");
+    }
   };
     const handleSaveInvoice = async () => {
     try {
@@ -150,7 +195,7 @@ export default function CreateInvoice() {
     <PageWrapper>
 
       {/* HEADER */}
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
+      <div className="invoice-header">
         <div>
           <b>{shop.name}</b><br />
           {shop.address}
@@ -163,7 +208,7 @@ export default function CreateInvoice() {
       <hr />
 
       {/* INVOICE META */}
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
+      <div className="flex-row-between">
         <div>
           <b>Invoice No:</b>{" "}
           {invoiceId ? invoiceId.slice(-6) : "-"}
@@ -177,109 +222,119 @@ export default function CreateInvoice() {
       <hr />
 
       {/* CUSTOMER */}
-      <div style={{ display: "flex", gap: 10 }}>
+      <div className="form-group">
+        <select value={selectedCustomer} onChange={handleCustomerSelect} className="form-select">
+          <option value="">-- Select Customer --</option>
+          {customers.map(c => (
+            <option key={c.mobile} value={c.mobile}>
+              {c.name} ({c.mobile})
+            </option>
+          ))}
+        </select>
+        <span style={{ fontSize: "14px", color: "#666" }}>or</span>
         <input
-          placeholder="Customer Name"
+          placeholder="Name"
           value={customerName}
-          onChange={e =>
-            setCustomerName(e.target.value.replace(/[^a-zA-Z ]/g, ""))
-          }
+          onChange={e => {
+            setCustomerName(e.target.value.replace(/[^a-zA-Z ]/g, ""));
+            setSelectedCustomer("");
+          }}
+          className="form-input"
         />
         <input
           placeholder="Mobile"
           maxLength={10}
           value={customerMobile}
-          onChange={e =>
-            setCustomerMobile(e.target.value.replace(/[^0-9]/g, ""))
-          }
+          onChange={e => {
+            setCustomerMobile(e.target.value.replace(/[^0-9]/g, ""));
+            setSelectedCustomer("");
+          }}
+          className="form-input"
         />
       </div>
 
       <hr />
 
       {/* PRODUCT FORM */}
-      <div style={{ display: "flex", gap: 8 }}>
-        <select value={productId} onChange={handleProductChange}>
+      <div className="form-group">
+        <select value={productId} onChange={handleProductChange} className="form-select">
           <option value="">Product</option>
           {systems.flatMap(s => (s.products || [])).map(p =>
             <option key={p.id} value={p.id}>{p.name}</option>
           )}
         </select>
 
-        <select value={sizeMM} onChange={e => setSizeMM(e.target.value)}>
+        <select value={sizeMM} onChange={e => setSizeMM(e.target.value)} className="form-select">
           <option value="">Size</option>
           {variants.map(v =>
             <option key={v.size_mm} value={v.size_mm}>{v.size_mm} mm</option>
           )}
         </select>
 
-        <input placeholder="Qty" value={qty} onChange={e => setQty(e.target.value)} />
-        <input placeholder="Disc %" value={lineDiscount} onChange={e => setLineDiscount(e.target.value)} style={{ width: 80 }} />
+        <input placeholder="Qty" value={qty} onChange={e => setQty(e.target.value)} className="form-input" />
+        <input placeholder="Disc %" value={lineDiscount} onChange={e => setLineDiscount(e.target.value)} className="form-input" />
 
         <button onClick={handleAddOrUpdate}>{editId ? "Update" : "Add"}</button>
       </div>
 
       {/* TABLE */}
-      <table
-        style={{
-          width: "100%",
-          borderCollapse: "collapse",
-          marginTop: 15
-        }}
-      >
-        <thead>
-          <tr>
-            {["Product", "Size", "Qty", "Rate", "Disc%", "Amount", "Action"].map(h => (
-              <th
-                key={h}
-                style={{
-                  border: "1px solid #ccc",
-                  padding: 6,
-                  textAlign: h === "Product" ? "left" : "right"
-                }}
-              >
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {items.map(i => (
-            <tr key={i.id}>
-              <td style={{ border: "1px solid #ccc", padding: 6 }}>{i.productName}</td>
-              <td style={{ border: "1px solid #ccc", padding: 6, textAlign: "right" }}>{i.sizeMM}</td>
-              <td style={{ border: "1px solid #ccc", padding: 6, textAlign: "right" }}>{i.qty}</td>
-              <td style={{ border: "1px solid #ccc", padding: 6, textAlign: "right" }}>{i.price}</td>
-              <td style={{ border: "1px solid #ccc", padding: 6, textAlign: "right" }}>{i.discount}</td>
-              <td style={{ border: "1px solid #ccc", padding: 6, textAlign: "right" }}>{i.amount}</td>
-              <td style={{ border: "1px solid #ccc", padding: 6 }}>
-                <button onClick={() => handleEdit(i)}>✏️</button>
-                <button onClick={() => handleDelete(i.id)}>❌</button>
-              </td>
+      <div className="table-responsive" style={{ marginTop: 15 }}>
+        <table>
+          <thead>
+            <tr>
+              {["Sl. No", "Product", "Size", "Qty", "Rate", "Disc%", "Amount", "Action"].map(h => (
+                <th
+                  key={h}
+                  style={{
+                    border: "1px solid #ccc",
+                    textAlign: h === "Product" ? "left" : "right"
+                  }}
+                >
+                  {h}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {items.map((i, index) => (
+              <tr key={i.id}>
+                <td style={{ border: "1px solid #ccc", textAlign: "right" }}>{index + 1}</td>
+                <td style={{ border: "1px solid #ccc" }}>{i.productName}</td>
+                <td style={{ border: "1px solid #ccc", textAlign: "right" }}>{i.sizeMM}</td>
+                <td style={{ border: "1px solid #ccc", textAlign: "right" }}>{i.qty}</td>
+                <td style={{ border: "1px solid #ccc", textAlign: "right" }}>{i.price}</td>
+                <td style={{ border: "1px solid #ccc", textAlign: "right" }}>{i.discount}</td>
+                <td style={{ border: "1px solid #ccc", textAlign: "right" }}>{i.amount}</td>
+                <td style={{ border: "1px solid #ccc" }}>
+                  <button onClick={() => handleEdit(i)}>✏️</button>
+                  <button onClick={() => handleDelete(i.id)}>❌</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {/* TOTALS */}
-      <div style={{ marginTop: 10, textAlign: "right" }}>
+      <div className="pricing-summary">
         <div>Total Price: ₹{totalPrice}</div>
         <div>Total Discount: ₹{totalDiscount}</div>
         <h3>Final Amount: ₹{totalAmount}</h3>
       </div>
 
-      <button onClick={handleSave}>Save Invoice</button>
-
-      {invoiceId && (
-        <a
-          href={`http://localhost:5000/api/invoices/${invoiceId}/pdf`}
-          target="_blank"
-        >
-          <button>PDF</button>
-        </a>
-      )}
-
-      <button onClick={() => window.print()}>Print</button>
+      <div className="buttons-container">
+        <button onClick={handleSave}>Save Invoice</button>
+        {invoiceId && (
+          <a
+            href={`http://localhost:5000/api/invoices/${invoiceId}/pdf`}
+            target="_blank"
+            style={{ flex: 1, minWidth: 100 }}
+          >
+            <button>PDF</button>
+          </a>
+        )}
+        <button onClick={() => window.print()}>Print</button>
+      </div>
 
     </PageWrapper>
   );
