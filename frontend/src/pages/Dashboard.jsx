@@ -64,17 +64,25 @@ export default function Dashboard() {
 
   const StatCard = ({ title, value, icon }) => (
     <div style={{
-      flex: 1,
-      minWidth: "200px",
       backgroundColor: "#fff",
       padding: "1.5rem",
       borderRadius: "8px",
       boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-      textAlign: "center"
+      textAlign: "center",
+      transition: "transform 0.2s, box-shadow 0.2s",
+      border: "1px solid #f0f0f0"
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.transform = "translateY(-2px)";
+      e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.transform = "translateY(0)";
+      e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
     }}>
-      <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>{icon}</div>
-      <div style={{ fontSize: "14px", color: "#666", marginBottom: "0.5rem" }}>{title}</div>
-      <div style={{ fontSize: "24px", fontWeight: "bold", color: "#2563eb" }}>{value}</div>
+      <div style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>{icon}</div>
+      <div style={{ fontSize: "13px", color: "#666", marginBottom: "0.75rem", fontWeight: "500" }}>{title}</div>
+      <div style={{ fontSize: "26px", fontWeight: "bold", color: "#2563eb" }}>{value}</div>
     </div>
   );
 
@@ -84,67 +92,90 @@ export default function Dashboard() {
 
   return (
     <div className="page-wrapper">
-      <h1>CRM Dashboard</h1>
-      <p style={{ marginBottom: "2rem", color: "#666" }}>Welcome to National Traders</p>
+      {/* Header */}
+      <div style={{ marginBottom: "2rem" }}>
+        <h1 style={{ marginBottom: "0.5rem", fontSize: "28px" }}>CRM Dashboard</h1>
+        <p style={{ color: "#666", fontSize: "14px" }}>Welcome to National Traders</p>
+      </div>
 
       {/* Summary Cards */}
-      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "3rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.5rem", marginBottom: "3rem" }}>
         <StatCard title="Today's Sales" value={`₹${stats.todaySales}`} icon="💰" />
         <StatCard title="Today's Invoices" value={stats.todayInvoices} icon="📄" />
         <StatCard title="Total Customers" value={stats.totalCustomers} icon="👥" />
         <StatCard title="Pending Balance" value={`₹${stats.pendingBalance}`} icon="⏳" />
       </div>
 
+      <hr style={{ margin: "2rem 0" }} />
+
       {/* Quick Navigation */}
       <div style={{ marginBottom: "3rem" }}>
-        <h2 style={{ marginBottom: "1rem" }}>Quick Actions</h2>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-          <button onClick={() => navigate("/billing")} style={{ flex: 1, minWidth: "150px" }}>
+        <h2 style={{ marginBottom: "1.5rem", fontSize: "18px", fontWeight: "600" }}>Quick Actions</h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem" }}>
+          <button onClick={() => navigate("/billing")} style={{ padding: "12px 16px", fontSize: "14px", fontWeight: "500" }}>
             ➕ Create Invoice
           </button>
-          <button onClick={() => navigate("/invoices")} style={{ flex: 1, minWidth: "150px" }}>
+          <button onClick={() => navigate("/invoices")} style={{ padding: "12px 16px", fontSize: "14px", fontWeight: "500" }}>
             📋 View Invoices
           </button>
-          <button onClick={() => navigate("/customers")} style={{ flex: 1, minWidth: "150px" }}>
+          <button onClick={() => navigate("/customers")} style={{ padding: "12px 16px", fontSize: "14px", fontWeight: "500" }}>
             👥 Customers
           </button>
-          <button onClick={() => navigate("/products")} style={{ flex: 1, minWidth: "150px" }}>
+          <button onClick={() => navigate("/products")} style={{ padding: "12px 16px", fontSize: "14px", fontWeight: "500" }}>
             📦 Products
           </button>
         </div>
       </div>
 
+      <hr style={{ margin: "2rem 0" }} />
+
       {/* Recent Invoices */}
       <div>
-        <h2 style={{ marginBottom: "1rem" }}>Recent Invoices</h2>
+        <h2 style={{ marginBottom: "1.5rem", fontSize: "18px", fontWeight: "600" }}>Recent Invoices</h2>
         {recentInvoices.length === 0 ? (
-          <p style={{ color: "#666" }}>No invoices yet</p>
+          <div style={{ 
+            backgroundColor: "#f5f5f5", 
+            padding: "2rem", 
+            textAlign: "center", 
+            borderRadius: "8px",
+            color: "#999"
+          }}>
+            <p style={{ fontSize: "14px" }}>No invoices yet. <a href="/billing" style={{ color: "#2563eb", cursor: "pointer" }}>Create one now</a></p>
+          </div>
         ) : (
           <div className="table-responsive">
-            <table>
+            <table style={{ borderCollapse: "collapse", width: "100%" }}>
               <thead>
                 <tr>
-                  <th>Invoice No</th>
-                  <th>Customer</th>
-                  <th>Date</th>
-                  <th>Amount</th>
-                  <th>Status</th>
+                  <th style={{ border: "2px solid #333", padding: "10px", backgroundColor: "#f5f5f5", textAlign: "left", fontWeight: "600" }}>Invoice No</th>
+                  <th style={{ border: "2px solid #333", padding: "10px", backgroundColor: "#f5f5f5", textAlign: "left", fontWeight: "600" }}>Customer</th>
+                  <th style={{ border: "2px solid #333", padding: "10px", backgroundColor: "#f5f5f5", textAlign: "center", fontWeight: "600" }}>Date</th>
+                  <th style={{ border: "2px solid #333", padding: "10px", backgroundColor: "#f5f5f5", textAlign: "right", fontWeight: "600" }}>Amount</th>
+                  <th style={{ border: "2px solid #333", padding: "10px", backgroundColor: "#f5f5f5", textAlign: "center", fontWeight: "600" }}>Status</th>
                 </tr>
               </thead>
               <tbody>
                 {recentInvoices.map(inv => (
                   <tr key={inv._id}>
-                    <td>{inv.invoiceNumber}</td>
-                    <td>{inv.customerName}</td>
-                    <td>{new Date(inv.createdAt).toLocaleDateString()}</td>
-                    <td>₹{inv.total}</td>
-                    <td>
+                    <td style={{ border: "1px solid #ccc", padding: "10px" }}>
+                      <span style={{ fontWeight: "600", color: "#2563eb" }}>{inv.invoiceNumber}</span>
+                    </td>
+                    <td style={{ border: "1px solid #ccc", padding: "10px" }}>{inv.customerName}</td>
+                    <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center", fontSize: "13px" }}>
+                      {new Date(inv.createdAt).toLocaleDateString()}
+                    </td>
+                    <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "right", fontWeight: "600" }}>
+                      ₹{parseFloat(inv.total).toFixed(2)}
+                    </td>
+                    <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>
                       <span style={{
-                        padding: "4px 8px",
+                        padding: "6px 12px",
                         borderRadius: "4px",
                         fontSize: "12px",
+                        fontWeight: "500",
                         backgroundColor: inv.paymentStatus === "Paid" ? "#d4edda" : "#fff3cd",
-                        color: inv.paymentStatus === "Paid" ? "#155724" : "#856404"
+                        color: inv.paymentStatus === "Paid" ? "#155724" : "#856404",
+                        display: "inline-block"
                       }}>
                         {inv.paymentStatus || "Balance"}
                       </span>

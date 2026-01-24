@@ -1,0 +1,25 @@
+System	Category	Product ID	Product Name	Unit	Length_M	Size_MM	Price
+CPVC	CPVC Plumbing System	cpvc-pipe-sdr11	CPVC Pipe SDR 11	length	3	15	75
+CPVC	CPVC Plumbing System	cpvc-pipe-sdr11	CPVC Pipe SDR 11	length	3	20	95
+CPVC	CPVC Plumbing System	cpvc-pipe-sdr11	CPVC Pipe SDR 11	length	3	25	120
+CPVC	CPVC Plumbing System	cpvc-pipe-sdr11	CPVC Pipe SDR 11	length	3	32	165
+CPVC	CPVC Plumbing System	cpvc-pipe-sdr11	CPVC Pipe SDR 11	length	3	40	210
+CPVC	CPVC Plumbing System	cpvc-pipe-sdr11	CPVC Pipe SDR 11	length	3	50	325
+CPVC	CPVC Plumbing System	cpvc-elbow	CPVC Elbow 90°	pcs		15	18
+CPVC	CPVC Plumbing System	cpvc-elbow	CPVC Elbow 90°	pcs		20	28
+CPVC	CPVC Plumbing System	cpvc-elbow	CPVC Elbow 90°	pcs		25	45
+CPVC	CPVC Plumbing System	cpvc-elbow	CPVC Elbow 90°	pcs		32	75
+CPVC	CPVC Plumbing System	cpvc-elbow	CPVC Elbow 90°	pcs		40	115
+CPVC	CPVC Plumbing System	cpvc-elbow	CPVC Elbow 90°	pcs		50	185
+CPVC	CPVC Plumbing System	cpvc-ball-valve	CPVC Ball Valve	pcs		15	180
+CPVC	CPVC Plumbing System	cpvc-ball-valve	CPVC Ball Valve	pcs		20	240
+CPVC	CPVC Plumbing System	cpvc-ball-valve	CPVC Ball Valve	pcs		25	320
+CPVC	CPVC Plumbing System	cpvc-ball-valve	CPVC Ball Valve	pcs		32	450
+CPVC	CPVC Plumbing System	cpvc-ball-valve	CPVC Ball Valve	pcs		40	650
+CPVC	CPVC Plumbing System	cpvc-ball-valve	CPVC Ball Valve	pcs		50	980
+UPVC	UPVC Plumbing System	upvc-pipe	UPVC Pipe	length	3	15	55
+UPVC	UPVC Plumbing System	upvc-pipe	UPVC Pipe	length	3	20	75
+UPVC	UPVC Plumbing System	upvc-pipe	UPVC Pipe	length	3	25	95
+UPVC	UPVC Plumbing System	upvc-pipe	UPVC Pipe	length	3	32	135
+UPVC	UPVC Plumbing System	upvc-pipe	UPVC Pipe	length	3	40	170
+UPVC	UPVC Plumbing System	upvc-pipe	UPVC Pipe	length	3	50	260

@@ -1,0 +1,968 @@
+[
+  {
+    "category": "AGRI PIPES CONFORMING TO IS 1784 & 4985-2021 (HSN Code: 391723)",
+    "itemCode": "Inches",
+    "description": "MM",
+    "price": 22
+  },
+  {
+    "category": "AGRI PIPES CONFORMING TO IS 1784 & 4985-2021 (HSN Code: 391723)",
+    "itemCode": "3\"",
+    "description": "90",
+    "price": 187.2
+  },
+  {
+    "category": "AGRI PIPES CONFORMING TO IS 1784 & 4985-2021 (HSN Code: 391723)",
+    "itemCode": "4\"",
+    "description": "110",
+    "price": 275.6
+  },
+  {
+    "category": "AGRI PIPES CONFORMING TO IS 1784 & 4985-2021 (HSN Code: 391723)",
+    "itemCode": "4½\"",
+    "description": "125",
+    "price": 348.4
+  },
+  {
+    "category": "AGRI PIPES CONFORMING TO IS 1784 & 4985-2021 (HSN Code: 391723)",
+    "itemCode": "5\"",
+    "description": "140",
+    "price": 431.6
+  },
+  {
+    "category": "AGRI PIPES CONFORMING TO IS 1784 & 4985-2021 (HSN Code: 391723)",
+    "itemCode": "6\"",
+    "description": "160",
+    "price": 572
+  },
+  {
+    "category": "AGRI PIPES CONFORMING TO IS 1784 & 4985-2021 (HSN Code: 391723)",
+    "itemCode": "7\"",
+    "description": "180",
+    "price": 691.6
+  },
+  {
+    "category": "AGRI PIPES CONFORMING TO IS 1784 & 4985-2021 (HSN Code: 391723)",
+    "itemCode": "8\"",
+    "description": "200",
+    "price": 884
+  },
+  {
+    "category": "AGRI PIPES CONFORMING TO IS 1784 & 4985-2021 (HSN Code: 391723)",
+    "itemCode": "9\"",
+    "description": "225",
+    "price": 1133.6
+  },
+  {
+    "category": "AGRI PIPES CONFORMING TO IS 1784 & 4985-2021 (HSN Code: 391723)",
+    "itemCode": "10\"",
+    "description": "250",
+    "price": 1367.6
+  },
+  {
+    "category": "AGRI PIPES CONFORMING TO IS 1784 & 4985-2021 (HSN Code: 391723)",
+    "itemCode": "11\"",
+    "description": "280",
+    "price": 1747.2
+  },
+  {
+    "category": "AGRI PIPES CONFORMING TO IS 1784 & 4985-2021 (HSN Code: 391723)",
+    "itemCode": "12\"",
+    "description": "315",
+    "price": 2184
+  },
+  {
+    "category": "AGRI PIPES CONFORMING TO IS 1784 & 4985-2021 (HSN Code: 391723)",
+    "itemCode": "14\"",
+    "description": "355",
+    "price": 2907
+  },
+  {
+    "category": "AGRI PIPES CONFORMING TO IS 1784 & 4985-2021 (HSN Code: 391723)",
+    "itemCode": "16\"",
+    "description": "400",
+    "price": 3705
+  },
+  {
+    "category": "SWR PIPES AS PER IS:13592 (HSN Code : 391723)",
+    "itemCode": "C la s s",
+    "description": "Size/ Length",
+    "price": 75
+  },
+  {
+    "category": "SWR PIPES AS PER IS:13592 (HSN Code : 391723)",
+    "itemCode": "TYPE A",
+    "description": "3 FT",
+    "price": 255
+  },
+  {
+    "category": "SWR PIPES AS PER IS:13592 (HSN Code : 391723)",
+    "itemCode": "TYPE A",
+    "description": "4 FT",
+    "price": 312
+  },
+  {
+    "category": "SWR PIPES AS PER IS:13592 (HSN Code : 391723)",
+    "itemCode": "TYPE A",
+    "description": "6 FT",
+    "price": 449
+  },
+  {
+    "category": "SWR PIPES AS PER IS:13592 (HSN Code : 391723)",
+    "itemCode": "TYPE A",
+    "description": "10FT",
+    "price": 608
+  },
+  {
+    "category": "SWR PIPES AS PER IS:13592 (HSN Code : 391723)",
+    "itemCode": "TYPE A",
+    "description": "12FT",
+    "price": 711
+  },
+  {
+    "category": "SWR PIPES AS PER IS:13592 (HSN Code : 391723)",
+    "itemCode": "TYPE B",
+    "description": "2 FT",
+    "price": 297
+  },
+  {
+    "category": "SWR PIPES AS PER IS:13592 (HSN Code : 391723)",
+    "itemCode": "TYPE B",
+    "description": "3 FT",
+    "price": 414
+  },
+  {
+    "category": "SWR PIPES AS PER IS:13592 (HSN Code : 391723)",
+    "itemCode": "TYPE B",
+    "description": "4 FT",
+    "price": 546
+  },
+  {
+    "category": "SWR PIPES AS PER IS:13592 (HSN Code : 391723)",
+    "itemCode": "TYPE B",
+    "description": "6 FT",
+    "price": 774
+  },
+  {
+    "category": "SWR PIPES AS PER IS:13592 (HSN Code : 391723)",
+    "itemCode": "TYPE B",
+    "description": "10FT",
+    "price": 974
+  },
+  {
+    "category": "PPR-C PIPES AS PER IS : 15801",
+    "itemCode": "Size",
+    "description": "Price (Per mtr)\n78.00",
+    "price": 317550
+  },
+  {
+    "category": "PPR-C PIPES AS PER IS : 15801",
+    "itemCode": "25",
+    "description": "107",
+    "price": 17655
+  },
+  {
+    "category": "PPR-C PIPES AS PER IS : 15801",
+    "itemCode": "32",
+    "description": "173",
+    "price": 18165
+  },
+  {
+    "category": "PPR-C PIPES AS PER IS : 15801",
+    "itemCode": "40",
+    "description": "256",
+    "price": 19200
+  },
+  {
+    "category": "PPR-C PIPES AS PER IS : 15801",
+    "itemCode": "50",
+    "description": "455",
+    "price": 20475
+  },
+  {
+    "category": "PPR-C PIPES AS PER IS : 15801",
+    "itemCode": "Size",
+    "description": "Price (Per mtr)\n67.50",
+    "price": 315187.5
+  },
+  {
+    "category": "PPR-C PIPES AS PER IS : 15801",
+    "itemCode": "25",
+    "description": "93",
+    "price": 15345
+  },
+  {
+    "category": "PPR-C PIPES AS PER IS : 15801",
+    "itemCode": "32",
+    "description": "147",
+    "price": 15435
+  },
+  {
+    "category": "PPR-C PIPES AS PER IS : 15801",
+    "itemCode": "40",
+    "description": "220",
+    "price": 16500
+  },
+  {
+    "category": "PPR-C PIPES AS PER IS : 15801",
+    "itemCode": "50",
+    "description": "390",
+    "price": 17550
+  },
+  {
+    "category": "PPR-C PIPES AS PER IS : 15801",
+    "itemCode": "Size",
+    "description": "Price (Per mtr)\n85.00",
+    "price": 319125
+  },
+  {
+    "category": "PPR-C PIPES AS PER IS : 15801",
+    "itemCode": "25",
+    "description": "113",
+    "price": 18645
+  },
+  {
+    "category": "PPR-C PIPES AS PER IS : 15801",
+    "itemCode": "32",
+    "description": "183",
+    "price": 19215
+  },
+  {
+    "category": "PPR-C PIPES AS PER IS : 15801",
+    "itemCode": "40",
+    "description": "300",
+    "price": 22500
+  },
+  {
+    "category": "PPR-C PIPES AS PER IS : 15801",
+    "itemCode": "50",
+    "description": "490",
+    "price": 22050
+  },
+  {
+    "category": "PPR-C PIPES AS PER IS : 15801",
+    "itemCode": "Size",
+    "description": "Price (Per mtr)\n52.50",
+    "price": 311812.5
+  },
+  {
+    "category": "PPR-C PIPES AS PER IS : 15801",
+    "itemCode": "25",
+    "description": "75",
+    "price": 12375
+  },
+  {
+    "category": "PPR-C PIPES AS PER IS : 15801",
+    "itemCode": "32",
+    "description": "120",
+    "price": 12600
+  },
+  {
+    "category": "PPR-C PIPES AS PER IS : 15801",
+    "itemCode": "40",
+    "description": "181",
+    "price": 13575
+  },
+  {
+    "category": "PPR-C PIPES AS PER IS : 15801",
+    "itemCode": "50",
+    "description": "288",
+    "price": 12960
+  },
+  {
+    "category": "Size",
+    "itemCode": "1¼\"",
+    "description": "25",
+    "price": 462
+  },
+  {
+    "category": "NOMINAL DIA\n35MM",
+    "itemCode": "125MM",
+    "description": "140",
+    "price": 1106
+  },
+  {
+    "category": "NOMINAL DIA\n35MM",
+    "itemCode": "150MM",
+    "description": "165",
+    "price": 1367
+  },
+  {
+    "category": "NOMINAL DIA\n35MM",
+    "itemCode": "*",
+    "description": "180",
+    "price": 1508
+  },
+  {
+    "category": "NOMINAL DIA\n35MM",
+    "itemCode": "175MM",
+    "description": "200",
+    "price": 2010
+  },
+  {
+    "category": "NOMINAL DIA\n35MM",
+    "itemCode": "200MM",
+    "description": "225",
+    "price": 2513
+  },
+  {
+    "category": "NOMINAL DIA\n35MM",
+    "itemCode": "*",
+    "description": "250",
+    "price": 3015
+  },
+  {
+    "category": "NOMINAL DIA\n35MM",
+    "itemCode": "250MM",
+    "description": "280",
+    "price": 4322
+  },
+  {
+    "category": "NOMINAL DIA\n35MM",
+    "itemCode": "300MM",
+    "description": "330",
+    "price": 5796
+  },
+  {
+    "category": "NOMINAL DIA\n35MM",
+    "itemCode": "*",
+    "description": "350",
+    "price": 7118
+  },
+  {
+    "category": "NOMINAL DIA\n35MM",
+    "itemCode": "350MM",
+    "description": "400",
+    "price": 8866
+  },
+  {
+    "category": "NOMINAL DIA\n35MM",
+    "itemCode": "125MM",
+    "description": "140",
+    "price": 1150
+  },
+  {
+    "category": "NOMINAL DIA\n35MM",
+    "itemCode": "150MM",
+    "description": "165",
+    "price": 1422
+  },
+  {
+    "category": "NOMINAL DIA\n35MM",
+    "itemCode": "*",
+    "description": "180",
+    "price": 1568
+  },
+  {
+    "category": "NOMINAL DIA\n35MM",
+    "itemCode": "175MM",
+    "description": "200",
+    "price": 2090
+  },
+  {
+    "category": "NOMINAL DIA\n35MM",
+    "itemCode": "200MM",
+    "description": "225",
+    "price": 2614
+  },
+  {
+    "category": "NOMINAL DIA\n35MM",
+    "itemCode": "*",
+    "description": "250",
+    "price": 3136
+  },
+  {
+    "category": "NOMINAL DIA\n35MM",
+    "itemCode": "250MM",
+    "description": "280",
+    "price": 4495
+  },
+  {
+    "category": "NOMINAL DIA\n35MM",
+    "itemCode": "300MM",
+    "description": "330",
+    "price": 6028
+  },
+  {
+    "category": "NOMINAL DIA\n35MM",
+    "itemCode": "*",
+    "description": "350",
+    "price": 7403
+  },
+  {
+    "category": "NOMINAL DIA\n35MM",
+    "itemCode": "350MM",
+    "description": "400",
+    "price": 9221
+  },
+  {
+    "category": "IS:15328",
+    "itemCode": "6\"",
+    "description": "160",
+    "price": 496
+  },
+  {
+    "category": "IS:15328",
+    "itemCode": "8\"",
+    "description": "200",
+    "price": 755
+  },
+  {
+    "category": "IS:15328",
+    "itemCode": "10\"",
+    "description": "250",
+    "price": 1179
+  },
+  {
+    "category": "IS:15328",
+    "itemCode": "12\"",
+    "description": "315",
+    "price": 1868
+  },
+  {
+    "category": "IS:15328",
+    "itemCode": "16\"",
+    "description": "400",
+    "price": 3019
+  },
+  {
+    "category": "Inches",
+    "itemCode": "Inches",
+    "description": "SDR",
+    "price": 41
+  },
+  {
+    "category": "Inches",
+    "itemCode": "Inches\n½\"",
+    "description": "PN/DIA\n20MM",
+    "price": 2
+  },
+  {
+    "category": "Inches",
+    "itemCode": "2½\"",
+    "description": "75MM",
+    "price": 110.7
+  },
+  {
+    "category": "Inches",
+    "itemCode": "3\"",
+    "description": "90MM",
+    "price": 153
+  },
+  {
+    "category": "Inches",
+    "itemCode": "4\"",
+    "description": "110MM",
+    "price": 231
+  },
+  {
+    "category": "Inches",
+    "itemCode": "4½\"",
+    "description": "125MM",
+    "price": 199
+  },
+  {
+    "category": "Inches",
+    "itemCode": "5\"",
+    "description": "140MM",
+    "price": 380
+  },
+  {
+    "category": "Inches",
+    "itemCode": "6\"",
+    "description": "160MM",
+    "price": 481
+  },
+  {
+    "category": "Inches",
+    "itemCode": "7\"",
+    "description": "180MM",
+    "price": 606.5
+  },
+  {
+    "category": "Inches",
+    "itemCode": "8\"",
+    "description": "200MM",
+    "price": 753.5
+  },
+  {
+    "category": "Inches",
+    "itemCode": "9\"",
+    "description": "225MM",
+    "price": 954
+  },
+  {
+    "category": "Inches",
+    "itemCode": "10\"",
+    "description": "250MM",
+    "price": 1168.5
+  },
+  {
+    "category": "Inches",
+    "itemCode": "11\"",
+    "description": "280MM",
+    "price": 1512
+  },
+  {
+    "category": "Inches",
+    "itemCode": "12\"",
+    "description": "315MM",
+    "price": 1899
+  },
+  {
+    "category": "CLASS 500/ COEFFICIENT 1.4",
+    "itemCode": "OD MM\n110",
+    "description": "PN 12.5",
+    "price": 16
+  },
+  {
+    "category": "CLASS 500/ COEFFICIENT 1.4",
+    "itemCode": "160",
+    "description": "798",
+    "price": 904
+  },
+  {
+    "category": "CLASS 500/ COEFFICIENT 1.4",
+    "itemCode": "200",
+    "description": "1110",
+    "price": 1318
+  },
+  {
+    "category": "CLASS 500/ COEFFICIENT 1.4",
+    "itemCode": "250",
+    "description": "1644",
+    "price": 2084
+  },
+  {
+    "category": "CLASS 500/ COEFFICIENT 1.4",
+    "itemCode": "315",
+    "description": "2641",
+    "price": 3308
+  },
+  {
+    "category": "CLASS 500/ COEFFICIENT 1.4",
+    "itemCode": "400",
+    "description": "4267",
+    "price": 5388
+  },
+  {
+    "category": "CLASS 500/ COEFFICIENT 1.4",
+    "itemCode": "OD MM\n110",
+    "description": "PN 12.5",
+    "price": 16
+  },
+  {
+    "category": "CLASS 500/ COEFFICIENT 1.4",
+    "itemCode": "160",
+    "description": "852",
+    "price": 956
+  },
+  {
+    "category": "CLASS 500/ COEFFICIENT 1.4",
+    "itemCode": "200",
+    "description": "1309",
+    "price": 1450
+  },
+  {
+    "category": "CLASS 500/ COEFFICIENT 1.4",
+    "itemCode": "250",
+    "description": "2043",
+    "price": 2293
+  },
+  {
+    "category": "CLASS 500/ COEFFICIENT 1.4",
+    "itemCode": "315",
+    "description": "3250",
+    "price": 3639
+  },
+  {
+    "category": "CLASS 500/ COEFFICIENT 1.4",
+    "itemCode": "400",
+    "description": "5254",
+    "price": 5926
+  },
+  {
+    "category": "Qty.",
+    "itemCode": "Qty.\n10ml Tube",
+    "description": "item Code\nPMSLXX10MLTU",
+    "price": 960
+  },
+  {
+    "category": "Qty.",
+    "itemCode": "25ml Tube",
+    "description": "PMSLXX25MLTU",
+    "price": 600
+  },
+  {
+    "category": "Qty.",
+    "itemCode": "50ml Tube",
+    "description": "PMSLXX50MLTU",
+    "price": 200
+  },
+  {
+    "category": "Qty.",
+    "itemCode": "50 ml Tin",
+    "description": "PMSLXX50MLTC",
+    "price": 288
+  },
+  {
+    "category": "Qty.",
+    "itemCode": "100 ml Tin",
+    "description": "PMPVC100MLTC",
+    "price": 144
+  },
+  {
+    "category": "Qty.",
+    "itemCode": "250 ml Tin",
+    "description": "PMSLX250MLTC",
+    "price": 96
+  },
+  {
+    "category": "Qty.",
+    "itemCode": "500 ml Tin",
+    "description": "PMSLX500MLTC",
+    "price": 48
+  },
+  {
+    "category": "Qty.",
+    "itemCode": "1000 ml Tin",
+    "description": "PMSL1000MLTC",
+    "price": 24
+  },
+  {
+    "category": "Qty.",
+    "itemCode": "5000 ml Tin",
+    "description": "PMSL5000MLTC",
+    "price": 1
+  },
+  {
+    "category": "Item Code",
+    "itemCode": "TP165",
+    "description": "Alpha 5\" Round PTMT Overhead Shower",
+    "price": 397
+  },
+  {
+    "category": "Item Code",
+    "itemCode": "TP164",
+    "description": "Alpha 8\" Round PTMT Overhead Shower",
+    "price": 459
+  },
+  {
+    "category": "Item Code",
+    "itemCode": "TP097",
+    "description": "4\" Round ABS Overhead Shower with 9\" SS Shower Arm and SS Flange",
+    "price": 620
+  },
+  {
+    "category": "Item Code",
+    "itemCode": "TP098",
+    "description": "Caperi 4\" Round ABS Overhead Shower with 9\" SS Shower Arm and SS Flange",
+    "price": 690
+  },
+  {
+    "category": "Item Code",
+    "itemCode": "TP099",
+    "description": "Eden 4\" Square ABS Overhead Shower with 9\" SS Shower Arm and SS Flange",
+    "price": 590
+  },
+  {
+    "category": "Item Code",
+    "itemCode": "TP103",
+    "description": "Eldo 8\" Round ABS Overhead Shower",
+    "price": 1450
+  },
+  {
+    "category": "Item Code",
+    "itemCode": "TP104",
+    "description": "ALex 8\" Round ABS Overhead Shower",
+    "price": 1550
+  },
+  {
+    "category": "Item Code",
+    "itemCode": "TP107",
+    "description": "ABS Health Faucets with 1 Mtr Hose & Hook",
+    "price": 600
+  },
+  {
+    "category": "Item Code",
+    "itemCode": "TP108",
+    "description": "ABS Health Faucets with 1 Mtr Hose & Hook",
+    "price": 875
+  },
+  {
+    "category": "Item Code",
+    "itemCode": "TP109",
+    "description": "ABS Health Faucets with 1 Mtr Hose & Hook",
+    "price": 975
+  },
+  {
+    "category": "Item Code",
+    "itemCode": "TP162",
+    "description": "ABS Health Faucets with 1 Mtr Hose & Hook",
+    "price": 730
+  },
+  {
+    "category": "Item Code",
+    "itemCode": "TP163",
+    "description": "ABS Health Faucets with 1.5 Mtr Hose & Hook",
+    "price": 794
+  },
+  {
+    "category": "Item Code\nTP181",
+    "itemCode": "TP182",
+    "description": "Jet Spray Uni (1.5 Mtr) Chrome",
+    "price": 752
+  },
+  {
+    "category": "Item Code\nTP181",
+    "itemCode": "TP183",
+    "description": "Jet Spray Staright (1 Mtr) Chrome",
+    "price": 603
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP122",
+    "description": "Float Valve Rod & Ball Cock 20mm",
+    "price": 450
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP212",
+    "description": "Float Valve Rod & Ball Cock 25mm",
+    "price": 863
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP185",
+    "description": "Wate Pipe (White) 750mm",
+    "price": 200
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP186",
+    "description": "Wate Pipe (White) 900mm",
+    "price": 224
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP284",
+    "description": "Collapiseble Waste Pipe",
+    "price": 100
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP150",
+    "description": "PVC Connection Hose  18\"",
+    "price": 91
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP151",
+    "description": "PVC Connection Hose  24\"",
+    "price": 104
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP152",
+    "description": "PVC Connection Hose 30\"",
+    "price": 127
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP153",
+    "description": "PVC Connection Hose  36\"",
+    "price": 144
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP154",
+    "description": "PVC Connection Hose  48\"",
+    "price": 195
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP225",
+    "description": "PTMT Connection Hose With Key 18\"",
+    "price": 125
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP226",
+    "description": "PTMT Connection Hose With Key 24\"",
+    "price": 147
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP178",
+    "description": "Extension Nipple Ivory",
+    "price": 68
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP093",
+    "description": "SS Black Hose Brass Nuts And Brass Insert 18\" (45cm)",
+    "price": 201
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP094",
+    "description": "SS Black Hose Brass Nuts And Brass Insert 24\" (60cm)",
+    "price": 224
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP095",
+    "description": "PVC Thread Hose Brass Nut And Brass Insert 18\" (45cm)",
+    "price": 168
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP096",
+    "description": "PVC Thread Hose Brass Nut And Brass Insert 24\" (60cm)",
+    "price": 182
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP119",
+    "description": "Wall Hook-Chrome",
+    "price": 125
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP118",
+    "description": "Wall Hook-White",
+    "price": 95
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP282",
+    "description": "PVC Waste Coupling",
+    "price": 108
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP283",
+    "description": "ABS Chrome Waste Coupling",
+    "price": 280
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP210",
+    "description": "PTMT Bottle Trap White",
+    "price": 747
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP127",
+    "description": "Long L-Bend Pipes (Plain)",
+    "price": 135
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP149",
+    "description": "Long L-Bend Pipes With Coupling",
+    "price": 173
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP 213",
+    "description": "PTMT Push Tap",
+    "price": 225
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP187",
+    "description": "Long Blend (Detachable) White",
+    "price": 180
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP120",
+    "description": "Tuff Seal Teflon Tape (12mm X 0.1mm X 10mtr)",
+    "price": 27.5
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP222",
+    "description": "Outer Lever Assembly",
+    "price": 104
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP224",
+    "description": "Ball-114mm HDPE",
+    "price": 97
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP221",
+    "description": "Syphon Assembly S/F",
+    "price": 328
+  },
+  {
+    "category": "Item Code\nTP121",
+    "itemCode": "TP223",
+    "description": "Ball- 90mm HDPE",
+    "price": 70
+  },
+  {
+    "category": "Item Code\nTP188",
+    "itemCode": "TP190",
+    "description": "PTMT Shelf White  18 \"",
+    "price": 700
+  },
+  {
+    "category": "Item Code\nTP188",
+    "itemCode": "TP191",
+    "description": "PTMT Double Shelf White",
+    "price": 1750
+  },
+  {
+    "category": "Item Code\nTP188",
+    "itemCode": "TP207",
+    "description": "PTMT Soap Dish White",
+    "price": 280
+  },
+  {
+    "category": "Item Code\nTP188",
+    "itemCode": "TP198",
+    "description": "PTMT Corner Shelf White (SET OF 3)",
+    "price": 800
+  },
+  {
+    "category": "Item Code\nTP188",
+    "itemCode": "TP206",
+    "description": "PTMT Soap Dish White Double",
+    "price": 466
+  },
+  {
+    "category": "Item Code\nTP188",
+    "itemCode": "TP194",
+    "description": "Single Shelf- White",
+    "price": 1096
+  },
+  {
+    "category": "Item Code\nTP188",
+    "itemCode": "TP196",
+    "description": "Acrylic Shelf Black 18\"",
+    "price": 840
+  },
+  {
+    "category": "Item Code\nTP188",
+    "itemCode": "TP199",
+    "description": "Acrylic Corner Shelf Black (SET OF 3)",
+    "price": 800
+  },
+  {
+    "category": "Item Code\nTP188",
+    "itemCode": "TP208",
+    "description": "Soap Dish Black Double",
+    "price": 560
+  },
+  {
+    "category": "Item Code\nTP188",
+    "itemCode": "TP202",
+    "description": "Acrlyic Tumbler Holder Black",
+    "price": 840
+  }
+]

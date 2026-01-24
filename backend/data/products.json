@@ -1,0 +1,68 @@
+[
+  {
+    "system": "CPVC",
+    "category": "CPVC Plumbing System",
+    "products": [
+      {
+        "id": "cpvc-pipe-sdr11",
+        "name": "CPVC Pipe SDR 11",
+        "unit": "length",
+        "length_m": 3,
+        "variants": [
+          { "size_mm": 15, "price": 75 },
+          { "size_mm": 20, "price": 95 },
+          { "size_mm": 25, "price": 120 },
+          { "size_mm": 32, "price": 165 },
+          { "size_mm": 40, "price": 210 },
+          { "size_mm": 50, "price": 325 }
+        ]
+      },
+      {
+        "id": "cpvc-elbow",
+        "name": "CPVC Elbow 90°",
+        "unit": "pcs",
+        "variants": [
+          { "size_mm": 15, "price": 18 },
+          { "size_mm": 20, "price": 28 },
+          { "size_mm": 25, "price": 45 },
+          { "size_mm": 32, "price": 75 },
+          { "size_mm": 40, "price": 115 },
+          { "size_mm": 50, "price": 185 }
+        ]
+      },
+      {
+        "id": "cpvc-ball-valve",
+        "name": "CPVC Ball Valve",
+        "unit": "pcs",
+        "variants": [
+          { "size_mm": 15, "price": 180 },
+          { "size_mm": 20, "price": 240 },
+          { "size_mm": 25, "price": 320 },
+          { "size_mm": 32, "price": 450 },
+          { "size_mm": 40, "price": 650 },
+          { "size_mm": 50, "price": 980 }
+        ]
+      }
+    ]
+  },
+  {
+    "system": "UPVC",
+    "category": "UPVC Plumbing System",
+    "products": [
+      {
+        "id": "upvc-pipe",
+        "name": "UPVC Pipe",
+        "unit": "length",
+        "length_m": 3,
+        "variants": [
+          { "size_mm": 15, "price": 55 },
+          { "size_mm": 20, "price": 75 },
+          { "size_mm": 25, "price": 95 },
+          { "size_mm": 32, "price": 135 },
+          { "size_mm": 40, "price": 170 },
+          { "size_mm": 50, "price": 260 }
+        ]
+      }
+    ]
+  }
+]

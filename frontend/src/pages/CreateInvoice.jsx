@@ -231,43 +231,177 @@ export default function CreateInvoice() {
       <hr />
 
       {/* CUSTOMER */}
-      <div className="form-group">
-        <select value={selectedCustomer} onChange={handleCustomerSelect} className="form-select">
-          <option value="">-- Select Customer --</option>
-          {customers.map(c => (
-            <option key={c.mobile} value={c.mobile}>
-              {c.name} ({c.mobile})
-            </option>
-          ))}
-        </select>
-        <span style={{ fontSize: "14px", color: "#666" }}>or</span>
-        <input
-          placeholder="Name"
-          value={customerName}
-          onChange={e => {
-            setCustomerName(e.target.value.replace(/[^a-zA-Z ]/g, ""));
-            setSelectedCustomer("");
-          }}
-          className="form-input"
-        />
-        <input
-          placeholder="Mobile"
-          maxLength={10}
-          value={customerMobile}
-          onChange={e => {
-            setCustomerMobile(e.target.value.replace(/[^0-9]/g, ""));
-            setSelectedCustomer("");
-          }}
-          className="form-input"
-        />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1rem", marginBottom: "1rem" }}>
+        <div>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Select Customer</label>
+          <select value={selectedCustomer} onChange={handleCustomerSelect} className="form-select" style={{ width: "100%" }}>
+            <option value="">-- Select Customer --</option>
+            {customers.map(c => (
+              <option key={c.mobile} value={c.mobile}>
+                {c.name} ({c.mobile})
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        <div style={{ textAlign: "center", color: "#666", fontSize: "14px", fontWeight: "500" }}>OR</div>
+        
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem" }}>
+          <div>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Name</label>
+            <input
+              placeholder="Name"
+              value={customerName}
+              onChange={e => {
+                setCustomerName(e.target.value.replace(/[^a-zA-Z ]/g, ""));
+                setSelectedCustomer("");
+              }}
+              className="form-input"
+              style={{ width: "100%" }}
+            />
+          </div>
+          <div>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Mobile</label>
+            <input
+              placeholder="Mobile"
+              maxLength={10}
+              value={customerMobile}
+              onChange={e => {
+                setCustomerMobile(e.target.value.replace(/[^0-9]/g, ""));
+                setSelectedCustomer("");
+              }}
+              className="form-input"
+              style={{ width: "100%" }}
+            />
+          </div>
+        </div>
+      </div>
+
+      <hr />
+
+      {/* PRODUCT FORM */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem", marginBottom: "1rem", alignItems: "flex-end" }}>
+        <div>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Product</label>
+          <select value={productId} onChange={handleProductChange} className="form-select" style={{ width: "100%" }}>
+            <option value="">Product</option>
+            {systems.flatMap(s => (s.products || [])).map(p =>
+              <option key={p.id} value={p.id}>{p.name}</option>
+            )}
+          </select>
+        </div>
+
+        <div>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Size</label>
+          <select value={sizeMM} onChange={e => setSizeMM(e.target.value)} className="form-select" style={{ width: "100%" }}>
+            <option value="">Size</option>
+            {variants.map(v =>
+              <option key={v.size_mm} value={v.size_mm}>{v.size_mm} mm</option>
+            )}
+          </select>
+        </div>
+
+        <div>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Qty</label>
+          <input placeholder="Qty" value={qty} onChange={e => setQty(e.target.value)} className="form-input" style={{ width: "100%" }} />
+        </div>
+        
+        <div>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Disc %</label>
+          <input placeholder="Disc %" value={lineDiscount} onChange={e => setLineDiscount(e.target.value)} className="form-input" style={{ width: "100%" }} />
+        </div>
+
+        <button onClick={handleAddOrUpdate} style={{ height: "36px" }}>{editId ? "Update" : "Add"}</button>
+      </div>
+
+      {/* TABLE */}
+      <div className="table-responsive" style={{ marginTop: "2rem", marginBottom: "2rem" }}>
+        <table style={{ borderCollapse: "collapse", width: "100%" }}>
+          <thead>
+            <tr>
+              {["Sl. No", "Product", "Size", "Qty", "Rate", "Disc%", "Amount", "Action"].map(h => (
+                <th
+                  key={h}
+                  style={{
+                    border: "2px solid #333",
+                    padding: "10px",
+                    backgroundColor: "#f5f5f5",
+                    fontWeight: "600",
+                    textAlign: h === "Product" ? "left" : "center",
+                    minWidth: h === "Product" ? "200px" : "60px"
+                  }}
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {items.length === 0 ? (
+              <tr>
+                <td colSpan="8" style={{ border: "1px solid #ccc", padding: "20px", textAlign: "center", color: "#999" }}>
+                  No products added yet
+                </td>
+              </tr>
+            ) : (
+              items.map((i, index) => (
+                <tr key={i.id}>
+                  <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>{index + 1}</td>
+                  <td style={{ border: "1px solid #ccc", padding: "10px" }}>{i.productName}</td>
+                  <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>{i.sizeMM} mm</td>
+                  <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>{i.qty}</td>
+                  <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "right" }}>₹{i.price.toFixed(2)}</td>
+                  <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>{i.discount}%</td>
+                  <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "right", fontWeight: "600" }}>₹{i.amount.toFixed(2)}</td>
+                  <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>
+                    <button onClick={() => handleEdit(i)} style={{ padding: "4px 8px", marginRight: "4px" }}>✏️</button>
+                    <button onClick={() => handleDelete(i.id)} style={{ padding: "4px 8px" }}>❌</button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* TOTALS */}
+      <div style={{ 
+        display: "flex", 
+        justifyContent: "flex-end", 
+        marginBottom: "2rem",
+        marginTop: "2rem"
+      }}>
+        <div style={{ width: "100%", maxWidth: "400px", textAlign: "right" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "14px" }}>
+            <span>Total Price (Gross):</span>
+            <span style={{ fontWeight: "600" }}>₹{totalPrice.toFixed(2)}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "14px" }}>
+            <span>Total Discount:</span>
+            <span style={{ fontWeight: "600" }}>₹{totalDiscount.toFixed(2)}</span>
+          </div>
+          <div style={{ 
+            display: "flex",
+            justifyContent: "space-between",
+            marginBottom: "1rem", 
+            fontSize: "16px", 
+            fontWeight: "bold",
+            paddingTop: "0.5rem",
+            borderTop: "2px solid #333"
+          }}>
+            <span>Final Amount (Taxable):</span>
+            <span style={{ color: "#2563eb" }}>₹{totalAmount.toFixed(2)}</span>
+          </div>
+        </div>
       </div>
 
       <hr />
 
       {/* PAYMENT SECTION */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem", marginBottom: "1rem" }}>
+      <h3 style={{ marginBottom: "1rem", fontSize: "16px", fontWeight: "bold" }}>Payment Details</h3>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1.5rem", marginBottom: "1rem" }}>
         <div>
-          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Payment Status</label>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", fontSize: "14px" }}>Payment Status</label>
           <select value={paymentStatus} onChange={e => setPaymentStatus(e.target.value)} className="form-select" style={{ width: "100%" }}>
             <option value="Balance">Balance</option>
             <option value="Paid">Paid</option>
@@ -275,7 +409,7 @@ export default function CreateInvoice() {
         </div>
         
         <div>
-          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Payment Mode</label>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", fontSize: "14px" }}>Payment Mode</label>
           <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)} className="form-select" style={{ width: "100%" }}>
             <option value="">-- Select Mode --</option>
             <option value="Cash">Cash</option>
@@ -287,7 +421,7 @@ export default function CreateInvoice() {
 
         {paymentStatus === "Balance" && (
           <div>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Amount Paid</label>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", fontSize: "14px" }}>Amount Paid</label>
             <input 
               type="number" 
               value={amountPaid} 
@@ -301,73 +435,6 @@ export default function CreateInvoice() {
       </div>
 
       <hr />
-
-      {/* PRODUCT FORM */}
-      <div className="form-group">
-        <select value={productId} onChange={handleProductChange} className="form-select">
-          <option value="">Product</option>
-          {systems.flatMap(s => (s.products || [])).map(p =>
-            <option key={p.id} value={p.id}>{p.name}</option>
-          )}
-        </select>
-
-        <select value={sizeMM} onChange={e => setSizeMM(e.target.value)} className="form-select">
-          <option value="">Size</option>
-          {variants.map(v =>
-            <option key={v.size_mm} value={v.size_mm}>{v.size_mm} mm</option>
-          )}
-        </select>
-
-        <input placeholder="Qty" value={qty} onChange={e => setQty(e.target.value)} className="form-input" />
-        <input placeholder="Disc %" value={lineDiscount} onChange={e => setLineDiscount(e.target.value)} className="form-input" />
-
-        <button onClick={handleAddOrUpdate}>{editId ? "Update" : "Add"}</button>
-      </div>
-
-      {/* TABLE */}
-      <div className="table-responsive" style={{ marginTop: 15 }}>
-        <table>
-          <thead>
-            <tr>
-              {["Sl. No", "Product", "Size", "Qty", "Rate", "Disc%", "Amount", "Action"].map(h => (
-                <th
-                  key={h}
-                  style={{
-                    border: "1px solid #ccc",
-                    textAlign: h === "Product" ? "left" : "right"
-                  }}
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((i, index) => (
-              <tr key={i.id}>
-                <td style={{ border: "1px solid #ccc", textAlign: "right" }}>{index + 1}</td>
-                <td style={{ border: "1px solid #ccc" }}>{i.productName}</td>
-                <td style={{ border: "1px solid #ccc", textAlign: "right" }}>{i.sizeMM}</td>
-                <td style={{ border: "1px solid #ccc", textAlign: "right" }}>{i.qty}</td>
-                <td style={{ border: "1px solid #ccc", textAlign: "right" }}>{i.price}</td>
-                <td style={{ border: "1px solid #ccc", textAlign: "right" }}>{i.discount}</td>
-                <td style={{ border: "1px solid #ccc", textAlign: "right" }}>{i.amount}</td>
-                <td style={{ border: "1px solid #ccc" }}>
-                  <button onClick={() => handleEdit(i)}>✏️</button>
-                  <button onClick={() => handleDelete(i.id)}>❌</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* TOTALS */}
-      <div className="pricing-summary">
-        <div>Total Price: ₹{totalPrice}</div>
-        <div>Total Discount: ₹{totalDiscount}</div>
-        <h3>Final Amount: ₹{totalAmount}</h3>
-      </div>
 
       <div className="buttons-container">
         <button onClick={handleSave}>Save Invoice</button>

@@ -181,14 +181,16 @@ hr {
   }
 
   button {
-    padding: 6px 10px;
-    font-size: 12px;
+    padding: 8px 12px;
+    font-size: 13px;
+    width: 100%;
   }
 
   input, select {
     width: 100%;
-    padding: 6px;
-    font-size: 12px;
+    padding: 8px;
+    font-size: 13px;
+    box-sizing: border-box;
   }
 
   .form-input, .form-select {
@@ -201,6 +203,7 @@ hr {
 
   .flex-row-between {
     justify-content: flex-start;
+    flex-direction: column;
   }
 
   .invoice-header {
@@ -210,6 +213,7 @@ hr {
 
   .invoice-header > div {
     width: 100%;
+    text-align: left;
   }
 
   table {
@@ -217,7 +221,7 @@ hr {
   }
 
   th, td {
-    padding: 6px;
+    padding: 8px;
   }
 
   .pricing-summary {
