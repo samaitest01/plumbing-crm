@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { fetchCustomers, createCustomer } from "../services/api";
-import axios from "axios";
+import { fetchCustomers, createCustomer, fetchCustomerDetails } from "../services/api";
+import PageWrapper from "../components/PageWrapper";
 
 export default function Customers() {
   const [customers, setCustomers] = useState([]);
@@ -9,13 +9,20 @@ export default function Customers() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [customerDetails, setCustomerDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const loadCustomers = async () => {
     try {
+      setLoading(true);
       const res = await fetchCustomers();
       setCustomers(res.data || []);
+      setError("");
     } catch (err) {
       console.error("Failed to fetch customers", err);
+      setError("Failed to load customers");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -24,8 +31,13 @@ export default function Customers() {
   }, []);
 
   const handleAddCustomer = async () => {
-    if (!name || !mobile || mobile.length !== 10) {
-      alert("Please enter valid name and 10-digit mobile number");
+    if (!name || !mobile) {
+      alert("Please enter name and mobile number");
+      return;
+    }
+
+    if (!/^[0-9]{10}$/.test(mobile)) {
+      alert("Mobile must be a 10-digit number");
       return;
     }
 
@@ -43,7 +55,7 @@ export default function Customers() {
   const handleViewDetails = async (customerMobile) => {
     setLoadingDetails(true);
     try {
-      const res = await axios.get(`http://localhost:5000/api/customers/${customerMobile}`);
+      const res = await fetchCustomerDetails(customerMobile);
       setCustomerDetails(res.data);
       setSelectedCustomer(customerMobile);
     } catch (err) {
@@ -53,9 +65,23 @@ export default function Customers() {
     setLoadingDetails(false);
   };
 
+  if (loading) {
+    return (
+      <PageWrapper>
+        <div style={{ textAlign: "center", padding: "2rem" }}>Loading customers...</div>
+      </PageWrapper>
+    );
+  }
+
   return (
-    <div className="page-wrapper">
+    <PageWrapper>
       <h2>Customers</h2>
+
+      {error && (
+        <div style={{ padding: "1rem", backgroundColor: "#fee", color: "#c33", borderRadius: "4px", marginBottom: "1rem" }}>
+          {error}
+        </div>
+      )}
 
       <div style={{ marginBottom: "2rem" }} className="flex-col">
         <input
@@ -205,7 +231,7 @@ export default function Customers() {
                         <th>Invoice No</th>
                         <th>Date</th>
                         <th>Amount</th>
-                        <th>Paid</th>
+                        <th>Recorded</th>
                         <th>Balance</th>
                         <th>Status</th>
                       </tr>
@@ -215,19 +241,19 @@ export default function Customers() {
                         <tr key={inv._id}>
                           <td>{inv.invoiceNumber}</td>
                           <td>{new Date(inv.createdAt).toLocaleDateString()}</td>
-                          <td>₹{inv.total}</td>
-                          <td>₹{inv.amountPaid || 0}</td>
-                          <td>₹{inv.total - (inv.amountPaid || 0)}</td>
+                          <td>₹{inv.total?.toFixed(2)}</td>
+                          <td>₹{(inv.amountRecorded || 0).toFixed(2)}</td>
+                          <td>₹{(inv.balanceAmount || (inv.total - (inv.amountRecorded || 0))).toFixed(2)}</td>
                           <td>
                             <span style={{
                               padding: "4px 8px",
                               borderRadius: "4px",
                               fontSize: "12px",
-                              backgroundColor: inv.paymentStatus === "Paid" ? "#d4edda" : "#fff3cd",
-                              color: inv.paymentStatus === "Paid" ? "#155724" : "#856404",
+                              backgroundColor: inv.paymentStatus === "Recorded" ? "#d4edda" : "#fff3cd",
+                              color: inv.paymentStatus === "Recorded" ? "#155724" : "#856404",
                               fontWeight: "500"
                             }}>
-                              {inv.paymentStatus || "Balance"}
+                              {inv.paymentStatus || "Pending"}
                             </span>
                           </td>
                         </tr>
@@ -242,6 +268,6 @@ export default function Customers() {
           )}
         </>
       )}
-    </div>
+    </PageWrapper>
   );
 }
