@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { fetchInvoices, fetchCustomers } from "../services/api";
 import { useNavigate } from "react-router-dom";
+import PageWrapper from "../components/PageWrapper";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ export default function Dashboard() {
   });
   const [recentInvoices, setRecentInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetchDashboardData();
@@ -19,12 +21,14 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     try {
+      setLoading(true);
       const [invoicesRes, customersRes] = await Promise.all([
-        axios.get("http://localhost:5000/api/invoices"),
-        axios.get("http://localhost:5000/api/customers")
+        fetchInvoices(),
+        fetchCustomers()
       ]);
 
-      const invoices = invoicesRes.data || [];
+      // Handle both old format (array) and new format (object with invoices array)
+      const invoices = Array.isArray(invoicesRes.data) ? invoicesRes.data : invoicesRes.data.invoices || [];
       const customers = customersRes.data || [];
 
       // Calculate today's sales and invoices
@@ -39,10 +43,10 @@ export default function Dashboard() {
 
       const todaySales = todayInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
 
-      // Calculate pending balance
+      // Calculate pending balance (mock field)
       const pendingBalance = invoices
-        .filter(inv => inv.paymentStatus === "Balance")
-        .reduce((sum, inv) => sum + (inv.total - (inv.amountPaid || 0)), 0);
+        .filter(inv => inv.paymentStatus === "Pending")
+        .reduce((sum, inv) => sum + (inv.total - (inv.amountRecorded || 0)), 0);
 
       // Get recent invoices (last 5)
       const recent = invoices.slice(0, 5);
@@ -55,9 +59,11 @@ export default function Dashboard() {
       });
 
       setRecentInvoices(recent);
-      setLoading(false);
+      setError("");
     } catch (err) {
       console.error("Failed to fetch dashboard data", err);
+      setError("Failed to load dashboard data");
+    } finally {
       setLoading(false);
     }
   };
@@ -87,23 +93,33 @@ export default function Dashboard() {
   );
 
   if (loading) {
-    return <div className="page-wrapper"><p>Loading dashboard...</p></div>;
+    return (
+      <PageWrapper>
+        <div style={{ textAlign: "center", padding: "2rem" }}>Loading dashboard...</div>
+      </PageWrapper>
+    );
   }
 
   return (
-    <div className="page-wrapper">
+    <PageWrapper>
       {/* Header */}
       <div style={{ marginBottom: "2rem" }}>
         <h1 style={{ marginBottom: "0.5rem", fontSize: "28px" }}>CRM Dashboard</h1>
         <p style={{ color: "#666", fontSize: "14px" }}>Welcome to National Traders</p>
       </div>
 
+      {error && (
+        <div style={{ padding: "1rem", backgroundColor: "#fee", color: "#c33", borderRadius: "4px", marginBottom: "1rem" }}>
+          {error}
+        </div>
+      )}
+
       {/* Summary Cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.5rem", marginBottom: "3rem" }}>
         <StatCard title="Today's Sales" value={`₹${stats.todaySales}`} icon="💰" />
         <StatCard title="Today's Invoices" value={stats.todayInvoices} icon="📄" />
         <StatCard title="Total Customers" value={stats.totalCustomers} icon="👥" />
-        <StatCard title="Pending Balance" value={`₹${stats.pendingBalance}`} icon="⏳" />
+        <StatCard title="Pending Records" value={`₹${stats.pendingBalance}`} icon="⏳" />
       </div>
 
       <hr style={{ margin: "2rem 0" }} />
@@ -165,7 +181,7 @@ export default function Dashboard() {
                       {new Date(inv.createdAt).toLocaleDateString()}
                     </td>
                     <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "right", fontWeight: "600" }}>
-                      ₹{parseFloat(inv.total).toFixed(2)}
+                      ₹{parseFloat(inv.total || 0).toFixed(2)}
                     </td>
                     <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>
                       <span style={{
@@ -173,11 +189,11 @@ export default function Dashboard() {
                         borderRadius: "4px",
                         fontSize: "12px",
                         fontWeight: "500",
-                        backgroundColor: inv.paymentStatus === "Paid" ? "#d4edda" : "#fff3cd",
-                        color: inv.paymentStatus === "Paid" ? "#155724" : "#856404",
+                        backgroundColor: inv.paymentStatus === "Recorded" ? "#d4edda" : "#fff3cd",
+                        color: inv.paymentStatus === "Recorded" ? "#155724" : "#856404",
                         display: "inline-block"
                       }}>
-                        {inv.paymentStatus || "Balance"}
+                        {inv.paymentStatus || "Pending"}
                       </span>
                     </td>
                   </tr>
@@ -187,6 +203,6 @@ export default function Dashboard() {
           </div>
         )}
       </div>
-    </div>
+    </PageWrapper>
   );
 }
