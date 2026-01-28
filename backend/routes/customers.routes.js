@@ -4,7 +4,13 @@ const Customer = require("../models/Customer");
 const Invoice = require("../models/Invoice");
 
 router.get("/", async (req, res) => {
-  res.json(await Customer.find());
+  try {
+    const customers = await Customer.find().sort({ name: 1 });
+    res.json(customers);
+  } catch (err) {
+    console.error("Fetch customers error:", err);
+    res.status(500).json({ error: "Failed to fetch customers" });
+  }
 });
 
 router.get("/:mobile", async (req, res) => {
@@ -47,10 +53,28 @@ router.get("/:mobile", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const { name, mobile } = req.body;
+    
+    // Validation
+    if (!name || !mobile) {
+      return res.status(400).json({ error: "Name and mobile are required" });
+    }
+
+    if (!/^[0-9]{10}$/.test(mobile)) {
+      return res.status(400).json({ error: "Mobile must be a 10-digit number" });
+    }
+
     const customer = await Customer.create({ name, mobile });
     res.status(201).json(customer);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error("Create customer error:", err);
+    if (err.code === 11000) {
+      return res.status(400).json({ error: "Customer with this mobile number already exists" });
+    }
+    if (err.name === "ValidationError") {
+      const message = Object.values(err.errors).map(e => e.message).join(", ");
+      return res.status(400).json({ error: message });
+    }
+    res.status(500).json({ error: "Failed to create customer" });
   }
 });
 
