@@ -1,4 +1,11 @@
 {
+  "name": "plumbing-crm",
+  "private": true,
+  "scripts": {
+    "start": "npm --prefix backend start",
+    "build": "npm --prefix frontend install && npm --prefix frontend run build",
+    "postinstall": "npm --prefix backend install && npm --prefix frontend install"
+  },
   "dependencies": {
     "react-router-dom": "^7.11.0"
   }
