@@ -6,6 +6,21 @@ const PDFDocument = require("pdfkit");
 // SAVE INVOICE
 router.post("/", async (req, res) => {
   try {
+    const { customerName, customerMobile, items, subTotal, total } = req.body;
+
+    // Validation
+    if (!customerName || !customerMobile) {
+      return res.status(400).json({ message: "Customer name and mobile are required" });
+    }
+
+    if (!items || items.length === 0) {
+      return res.status(400).json({ message: "At least one item is required" });
+    }
+
+    if (!subTotal || !total) {
+      return res.status(400).json({ message: "Subtotal and total are required" });
+    }
+
     const invoice = await Invoice.create(req.body);
     res.status(201).json(invoice);
   } catch (err) {
@@ -13,6 +28,8 @@ router.post("/", async (req, res) => {
     let errorMsg = "Invoice save failed";
     if (err.code === 11000) {
       errorMsg = "Invoice number already exists, please try again";
+    } else if (err.name === "ValidationError") {
+      errorMsg = Object.values(err.errors).map(e => e.message).join(", ");
     }
     res.status(500).json({ message: errorMsg, error: err.message });
   }
@@ -21,10 +38,29 @@ router.post("/", async (req, res) => {
 // GET ALL INVOICES
 router.get("/", async (req, res) => {
   try {
-    const invoices = await Invoice.find().sort({ createdAt: -1 });
-    res.json(invoices);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = (page - 1) * limit;
+
+    const invoices = await Invoice.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+    
+    const total = await Invoice.countDocuments();
+
+    res.json({
+      invoices,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalInvoices: total,
+        hasMore: skip + invoices.length < total
+      }
+    });
   } catch (err) {
-    res.status(500).json({ message: "Fetch failed" });
+    console.error("Fetch invoices error:", err);
+    res.status(500).json({ message: "Fetch failed", error: err.message });
   }
 });
 
