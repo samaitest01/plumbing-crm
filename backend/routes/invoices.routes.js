@@ -157,11 +157,12 @@ router.get("/:id/pdf", async (req, res) => {
     doc.text("Total (Taxable):", leftMargin, currentY);
     doc.text(`₹${safe(invoice.total).toFixed(2)}`, leftMargin + 350, currentY, { width: 150, align: "right" });
 
-    // PAYMENT DETAILS SECTION
+    // PAYMENT DETAILS SECTION (MOCKED - For Record Keeping Only)
     currentY += 25;
-    doc.fontSize(12).font("Helvetica-Bold").text("PAYMENT DETAILS", leftMargin, currentY);
+    doc.fontSize(12).font("Helvetica-Bold").text("RECORD KEEPING DETAILS", leftMargin, currentY);
+    doc.fontSize(8).font("Helvetica").text("(Information only - no actual payment processing)", leftMargin, currentY + 13);
     
-    currentY += 18;
+    currentY += 28;
     doc.fontSize(10).font("Helvetica");
     doc.text(`Payment Status: ${invoice.paymentStatus || "N/A"}`, leftMargin, currentY);
     
@@ -169,10 +170,10 @@ router.get("/:id/pdf", async (req, res) => {
     doc.text(`Payment Mode: ${invoice.paymentMode || "N/A"}`, leftMargin, currentY);
     
     currentY += 15;
-    doc.text(`Amount Paid: ₹${safe(invoice.amountPaid).toFixed(2)}`, leftMargin, currentY);
+    doc.text(`Amount Recorded: ₹${safe(invoice.amountRecorded).toFixed(2)}`, leftMargin, currentY);
     
     currentY += 15;
-    doc.text(`Balance Due: ₹${safe(invoice.balanceDue).toFixed(2)}`, leftMargin, currentY);
+    doc.text(`Balance Amount: ₹${safe(invoice.balanceAmount).toFixed(2)}`, leftMargin, currentY);
 
     doc.end();
   } catch (err) {
