@@ -2,41 +2,50 @@ const mongoose = require("mongoose");
 
 const InvoiceSchema = new mongoose.Schema({
   invoiceNumber: { type: String, unique: true, sparse: true },
-  customerName: String,
-  customerMobile: String,
+  customerName: { type: String, required: true },
+  customerMobile: { type: String, required: true },
 
   items: [
     {
-      productName: String,
-      sizeMM: Number,
-      qty: Number,
-      price: Number,
-      discount: Number,
-      baseAmount: Number,
-      amount: Number
+      productName: { type: String, required: true },
+      sizeMM: { type: Number, required: true },
+      qty: { type: Number, required: true },
+      price: { type: Number, required: true },
+      discount: { type: Number, default: 0 },
+      baseAmount: { type: Number, required: true },
+      amount: { type: Number, required: true }
     }
   ],
 
-  subTotal: Number,
-  total: Number,
+  subTotal: { type: Number, required: true },
+  total: { type: Number, required: true },
   
-  // Payment fields
+  // MOCKED Payment fields - For record keeping only, no actual payment processing
   paymentStatus: { 
     type: String, 
-    enum: ["Paid", "Balance"], 
-    default: "Balance" 
+    enum: ["Recorded", "Pending"], 
+    default: "Pending",
+    description: "Mock field for tracking payment records only"
   },
   paymentMode: {
     type: String,
     enum: ["Cash", "UPI", "Card", "Other", ""],
-    default: ""
+    default: "",
+    description: "Mock field - no actual payment processing"
   },
   paymentDate: { type: Date },
-  amountPaid: { type: Number, default: 0 },
-  balanceDue: { type: Number, default: 0 },
+  amountRecorded: { type: Number, default: 0, description: "Mock field - amount recorded in books" },
+  balanceAmount: { type: Number, default: 0, description: "Mock field - balance for record keeping" },
 
   createdAt: { type: Date, default: Date.now }
+}, {
+  timestamps: true
 });
+
+// Add indexes for better query performance
+InvoiceSchema.index({ customerMobile: 1, createdAt: -1 });
+InvoiceSchema.index({ invoiceNumber: 1 });
+InvoiceSchema.index({ createdAt: -1 });
 
 // Pre-save middleware to generate unique short invoice number
 InvoiceSchema.pre('save', async function() {
@@ -64,5 +73,4 @@ InvoiceSchema.pre('save', async function() {
   }
 });
 
-// 🔴 IMPORTANT: no custom `id` field
 module.exports = mongoose.model("Invoice", InvoiceSchema);
