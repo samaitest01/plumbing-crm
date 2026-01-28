@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { fetchInvoices } from "../services/api";
+import PageWrapper from "../components/PageWrapper";
 
 export default function Invoices() {
   const [invoices, setInvoices] = useState([]);
@@ -7,24 +8,38 @@ export default function Invoices() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [sortOrder, setSortOrder] = useState("newest");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   useEffect(() => {
-    axios
-      .get("http://localhost:5000/api/invoices")
-      .then((res) => {
-        const data = res.data || [];
-        setInvoices(data);
-        applyFiltersAndSort(data, searchTerm, filterStatus, sortOrder);
-      })
-      .catch((err) => console.error(err));
+    loadInvoices();
   }, []);
+
+  const loadInvoices = async () => {
+    try {
+      setLoading(true);
+      const res = await fetchInvoices();
+      // Handle both old format (array) and new format (object with invoices array)
+      const data = Array.isArray(res.data) ? res.data : res.data.invoices || [];
+      setInvoices(data);
+      applyFiltersAndSort(data, searchTerm, filterStatus, sortOrder);
+      setError("");
+    } catch (err) {
+      console.error("Fetch invoices error:", err);
+      setError("Failed to load invoices");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     applyFiltersAndSort(invoices, searchTerm, filterStatus, sortOrder);
   }, [searchTerm, filterStatus, sortOrder, invoices]);
 
   const applyFiltersAndSort = (data, search, status, sort) => {
-    let result = data;
+    let result = [...data];
 
     // Search filter
     if (search) {
@@ -50,14 +65,28 @@ export default function Invoices() {
   };
 
   const getWhatsAppLink = (inv) => {
-    const message = `Hi ${inv.customerName}, your invoice #${inv.invoiceNumber} for ₹${inv.total} is ready. Click here to download: http://localhost:5000/api/invoices/${inv._id}/pdf`;
+    const message = `Hi ${inv.customerName}, your invoice #${inv.invoiceNumber} for ₹${inv.total} is ready. Click here to download: ${API_BASE_URL}/api/invoices/${inv._id}/pdf`;
     const encoded = encodeURIComponent(message);
     return `https://wa.me/${inv.customerMobile}?text=${encoded}`;
   };
 
+  if (loading) {
+    return (
+      <PageWrapper>
+        <div style={{ textAlign: "center", padding: "2rem" }}>Loading invoices...</div>
+      </PageWrapper>
+    );
+  }
+
   return (
-    <div className="page-wrapper">
+    <PageWrapper>
       <h2>Invoices</h2>
+
+      {error && (
+        <div style={{ padding: "1rem", backgroundColor: "#fee", color: "#c33", borderRadius: "4px", marginBottom: "1rem" }}>
+          {error}
+        </div>
+      )}
 
       {/* Search and Filter */}
       <div className="form-group" style={{ marginBottom: "1.5rem" }}>
@@ -77,8 +106,8 @@ export default function Invoices() {
             className="form-select"
           >
             <option value="">All Status</option>
-            <option value="Paid">Paid</option>
-            <option value="Balance">Balance</option>
+            <option value="Recorded">Recorded</option>
+            <option value="Pending">Pending</option>
           </select>
 
           <select
@@ -113,22 +142,22 @@ export default function Invoices() {
                   <td>{inv.invoiceNumber}</td>
                   <td>{new Date(inv.createdAt).toLocaleDateString()}</td>
                   <td>{inv.customerName}</td>
-                  <td>₹{inv.total}</td>
+                  <td>₹{inv.total?.toFixed(2)}</td>
                   <td>
                     <span style={{
                       padding: "4px 8px",
                       borderRadius: "4px",
                       fontSize: "12px",
-                      backgroundColor: inv.paymentStatus === "Paid" ? "#d4edda" : "#fff3cd",
-                      color: inv.paymentStatus === "Paid" ? "#155724" : "#856404",
+                      backgroundColor: inv.paymentStatus === "Recorded" ? "#d4edda" : "#fff3cd",
+                      color: inv.paymentStatus === "Recorded" ? "#155724" : "#856404",
                       fontWeight: "500"
                     }}>
-                      {inv.paymentStatus || "Balance"}
+                      {inv.paymentStatus || "Pending"}
                     </span>
                   </td>
                   <td style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                     <a
-                      href={`http://localhost:5000/api/invoices/${inv._id}/pdf`}
+                      href={`${API_BASE_URL}/api/invoices/${inv._id}/pdf`}
                       target="_blank"
                       rel="noreferrer"
                       style={{ textDecoration: "none" }}
@@ -141,7 +170,7 @@ export default function Invoices() {
                       rel="noreferrer"
                       style={{ textDecoration: "none" }}
                     >
-                      <button style={{ padding: "4px 8px", fontSize: "12px", backgroundColor: "#25d366" }}>💬 WhatsApp</button>
+                      <button style={{ padding: "4px 8px", fontSize: "12px", backgroundColor: "#25d366", color: "white" }}>💬 WhatsApp</button>
                     </a>
                   </td>
                 </tr>
@@ -150,6 +179,6 @@ export default function Invoices() {
           </table>
         </div>
       )}
-    </div>
+    </PageWrapper>
   );
 }
