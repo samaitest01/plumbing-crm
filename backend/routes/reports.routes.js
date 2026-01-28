@@ -102,26 +102,27 @@ router.get("/payment-status", protect, allowRoles("ADMIN"), async (req, res) => 
 
     const summary = {
       totalInvoices: invoices.length,
-      paidCount: 0,
-      balanceCount: 0,
-      paidAmount: 0,
+      recordedCount: 0,
+      pendingCount: 0,
+      recordedAmount: 0,
       pendingAmount: 0
     };
 
     invoices.forEach(inv => {
-      if (inv.paymentStatus === "Paid") {
-        summary.paidCount++;
-        summary.paidAmount += inv.total || 0;
+      if (inv.paymentStatus === "Recorded") {
+        summary.recordedCount++;
+        summary.recordedAmount += inv.total || 0;
       } else {
-        summary.balanceCount++;
-        summary.pendingAmount += (inv.total - (inv.amountPaid || 0)) || 0;
+        summary.pendingCount++;
+        summary.pendingAmount += (inv.total - (inv.amountRecorded || 0)) || 0;
       }
     });
 
     res.json({
       ...summary,
-      paidAmount: parseFloat(summary.paidAmount.toFixed(2)),
-      pendingAmount: parseFloat(summary.pendingAmount.toFixed(2))
+      recordedAmount: parseFloat(summary.recordedAmount.toFixed(2)),
+      pendingAmount: parseFloat(summary.pendingAmount.toFixed(2)),
+      note: "Mock payment tracking - no actual payment processing"
     });
   } catch (err) {
     console.error("Payment status error:", err);

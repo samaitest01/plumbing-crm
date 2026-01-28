@@ -34,10 +34,10 @@ export default function CreateInvoice() {
   const [invoiceId, setInvoiceId] = useState(null);
   const [invoiceDate, setInvoiceDate] = useState(null);
   
-  // 💳 PAYMENT FIELDS
-  const [paymentStatus, setPaymentStatus] = useState("Balance");
+  // 💳 MOCKED PAYMENT FIELDS (For Record Keeping Only)
+  const [paymentStatus, setPaymentStatus] = useState("Pending");
   const [paymentMode, setPaymentMode] = useState("");
-  const [amountPaid, setAmountPaid] = useState(0);
+  const [amountRecorded, setAmountRecorded] = useState(0);
 
   useEffect(() => {
     fetchAllProducts().then(r => setSystems(r.data || []));
@@ -168,8 +168,8 @@ export default function CreateInvoice() {
         total: totalAmount,
         paymentStatus,
         paymentMode,
-        amountPaid: paymentStatus === "Paid" ? totalAmount : Number(amountPaid) || 0,
-        balanceDue: paymentStatus === "Paid" ? 0 : totalAmount - (Number(amountPaid) || 0)
+        amountRecorded: paymentStatus === "Recorded" ? totalAmount : Number(amountRecorded) || 0,
+        balanceAmount: paymentStatus === "Recorded" ? 0 : totalAmount - (Number(amountRecorded) || 0)
       });
 
       setInvoiceId(res.data._id);
@@ -397,14 +397,19 @@ export default function CreateInvoice() {
 
       <hr />
 
-      {/* PAYMENT SECTION */}
-      <h3 style={{ marginBottom: "1rem", fontSize: "16px", fontWeight: "bold" }}>Payment Details</h3>
+      {/* PAYMENT SECTION - MOCKED (For Record Keeping Only) */}
+      <h3 style={{ marginBottom: "1rem", fontSize: "16px", fontWeight: "bold" }}>
+        Record Keeping Details
+        <span style={{ fontSize: "12px", color: "#666", fontWeight: "normal", marginLeft: "10px" }}>
+          (Information only - no actual payment processing)
+        </span>
+      </h3>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1.5rem", marginBottom: "1rem" }}>
         <div>
           <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", fontSize: "14px" }}>Payment Status</label>
           <select value={paymentStatus} onChange={e => setPaymentStatus(e.target.value)} className="form-select" style={{ width: "100%" }}>
-            <option value="Balance">Balance</option>
-            <option value="Paid">Paid</option>
+            <option value="Pending">Pending</option>
+            <option value="Recorded">Recorded</option>
           </select>
         </div>
         
@@ -419,13 +424,13 @@ export default function CreateInvoice() {
           </select>
         </div>
 
-        {paymentStatus === "Balance" && (
+        {paymentStatus === "Pending" && (
           <div>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", fontSize: "14px" }}>Amount Paid</label>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", fontSize: "14px" }}>Amount Recorded</label>
             <input 
               type="number" 
-              value={amountPaid} 
-              onChange={e => setAmountPaid(e.target.value)}
+              value={amountRecorded} 
+              onChange={e => setAmountRecorded(e.target.value)}
               placeholder="0"
               className="form-input"
               style={{ width: "100%" }}
@@ -440,7 +445,7 @@ export default function CreateInvoice() {
         <button onClick={handleSave}>Save Invoice</button>
         {invoiceId && (
           <a
-            href={`http://localhost:5000/api/invoices/${invoiceId}/pdf`}
+            href={`${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"}/api/invoices/${invoiceId}/pdf`}
             target="_blank"
             style={{ flex: 1, minWidth: 100 }}
           >
