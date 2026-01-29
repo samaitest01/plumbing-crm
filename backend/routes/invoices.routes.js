@@ -64,6 +64,31 @@ router.get("/", async (req, res) => {
   }
 });
 
+// UPDATE PAYMENT STATUS
+router.patch("/:id/payment", async (req, res) => {
+  try {
+    const { paymentStatus, paymentMode, amountRecorded, balanceAmount, paymentDate } = req.body;
+    
+    const invoice = await Invoice.findById(req.params.id);
+    if (!invoice) {
+      return res.status(404).json({ message: "Invoice not found" });
+    }
+
+    // Update payment fields
+    if (paymentStatus !== undefined) invoice.paymentStatus = paymentStatus;
+    if (paymentMode !== undefined) invoice.paymentMode = paymentMode;
+    if (amountRecorded !== undefined) invoice.amountRecorded = amountRecorded;
+    if (balanceAmount !== undefined) invoice.balanceAmount = balanceAmount;
+    if (paymentDate !== undefined) invoice.paymentDate = paymentDate;
+
+    await invoice.save();
+    res.json(invoice);
+  } catch (err) {
+    console.error("Update payment status error:", err);
+    res.status(500).json({ message: "Update failed", error: err.message });
+  }
+});
+
 // PDF
 router.get("/:id/pdf", async (req, res) => {
   try {

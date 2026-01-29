@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchInvoices } from "../services/api";
+import { fetchInvoices, updateInvoicePayment } from "../services/api";
 import PageWrapper from "../components/PageWrapper";
 
 export default function Invoices() {
@@ -10,6 +10,15 @@ export default function Invoices() {
   const [sortOrder, setSortOrder] = useState("newest");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [paymentData, setPaymentData] = useState({
+    paymentStatus: "Recorded",
+    paymentMode: "Cash",
+    amountRecorded: 0,
+    balanceAmount: 0,
+    paymentDate: new Date().toISOString().split('T')[0]
+  });
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
@@ -68,6 +77,31 @@ export default function Invoices() {
     const message = `Hi ${inv.customerName}, your invoice #${inv.invoiceNumber} for ₹${inv.total} is ready. Click here to download: ${API_BASE_URL}/api/invoices/${inv._id}/pdf`;
     const encoded = encodeURIComponent(message);
     return `https://wa.me/${inv.customerMobile}?text=${encoded}`;
+  };
+
+  const handleOpenPaymentModal = (invoice) => {
+    setSelectedInvoice(invoice);
+    setPaymentData({
+      paymentStatus: invoice.paymentStatus === "Recorded" ? "Pending" : "Recorded",
+      paymentMode: invoice.paymentMode || "Cash",
+      amountRecorded: invoice.paymentStatus === "Recorded" ? 0 : invoice.total,
+      balanceAmount: invoice.paymentStatus === "Recorded" ? invoice.total : 0,
+      paymentDate: new Date().toISOString().split('T')[0]
+    });
+    setShowPaymentModal(true);
+  };
+
+  const handleUpdatePayment = async () => {
+    try {
+      await updateInvoicePayment(selectedInvoice._id, paymentData);
+      setShowPaymentModal(false);
+      setSelectedInvoice(null);
+      loadInvoices(); // Reload invoices
+      alert("Payment status updated successfully!");
+    } catch (err) {
+      console.error("Update payment error:", err);
+      alert("Failed to update payment status");
+    }
   };
 
   if (loading) {
@@ -172,11 +206,138 @@ export default function Invoices() {
                     >
                       <button style={{ padding: "4px 8px", fontSize: "12px", backgroundColor: "#25d366", color: "white" }}>💬 WhatsApp</button>
                     </a>
+                    <button 
+                      onClick={() => handleOpenPaymentModal(inv)}
+                      style={{ 
+                        padding: "4px 8px", 
+                        fontSize: "12px", 
+                        backgroundColor: inv.paymentStatus === "Recorded" ? "#ffc107" : "#28a745", 
+                        color: "white",
+                        border: "none",
+                        cursor: "pointer",
+                        borderRadius: "4px"
+                      }}
+                    >
+                      {inv.paymentStatus === "Recorded" ? "Mark Unpaid" : "💰 Mark Paid"}
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Payment Modal */}
+      {showPaymentModal && selectedInvoice && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: "white",
+            padding: "2rem",
+            borderRadius: "8px",
+            maxWidth: "500px",
+            width: "90%",
+            maxHeight: "90vh",
+            overflow: "auto"
+          }}>
+            <h3>Update Payment Status</h3>
+            <p><strong>Invoice:</strong> {selectedInvoice.invoiceNumber}</p>
+            <p><strong>Customer:</strong> {selectedInvoice.customerName}</p>
+            <p><strong>Total Amount:</strong> ₹{selectedInvoice.total?.toFixed(2)}</p>
+
+            <div className="form-group">
+              <label>Payment Status</label>
+              <select
+                value={paymentData.paymentStatus}
+                onChange={(e) => setPaymentData({...paymentData, paymentStatus: e.target.value})}
+                className="form-select"
+              >
+                <option value="Recorded">Recorded (Paid)</option>
+                <option value="Pending">Pending (Unpaid)</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Payment Mode</label>
+              <select
+                value={paymentData.paymentMode}
+                onChange={(e) => setPaymentData({...paymentData, paymentMode: e.target.value})}
+                className="form-select"
+              >
+                <option value="Cash">Cash</option>
+                <option value="UPI">UPI</option>
+                <option value="Card">Card</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Amount Recorded</label>
+              <input
+                type="number"
+                value={paymentData.amountRecorded}
+                onChange={(e) => {
+                  const recorded = parseFloat(e.target.value) || 0;
+                  setPaymentData({
+                    ...paymentData, 
+                    amountRecorded: recorded,
+                    balanceAmount: selectedInvoice.total - recorded
+                  });
+                }}
+                className="form-input-full"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Balance Amount</label>
+              <input
+                type="number"
+                value={paymentData.balanceAmount}
+                readOnly
+                className="form-input-full"
+                style={{ backgroundColor: "#f5f5f5" }}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Payment Date</label>
+              <input
+                type="date"
+                value={paymentData.paymentDate}
+                onChange={(e) => setPaymentData({...paymentData, paymentDate: e.target.value})}
+                className="form-input-full"
+              />
+            </div>
+
+            <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
+              <button 
+                onClick={handleUpdatePayment}
+                style={{ flex: 1, padding: "0.75rem", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+              >
+                Update Payment
+              </button>
+              <button 
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  setSelectedInvoice(null);
+                }}
+                style={{ flex: 1, padding: "0.75rem", backgroundColor: "#6c757d", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </PageWrapper>

@@ -41,6 +41,7 @@ export const fetchAllProducts = () => API.get("/products");
 // Invoice APIs
 export const saveInvoice = (data) => API.post("/invoices", data);
 export const fetchInvoices = () => API.get("/invoices");
+export const updateInvoicePayment = (invoiceId, paymentData) => API.patch(`/invoices/${invoiceId}/payment`, paymentData);
 
 // Customer APIs
 export const fetchCustomers = () => API.get("/customers");
