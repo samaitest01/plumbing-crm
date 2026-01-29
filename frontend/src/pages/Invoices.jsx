@@ -81,11 +81,12 @@ export default function Invoices() {
 
   const handleOpenPaymentModal = (invoice) => {
     setSelectedInvoice(invoice);
+    const currentBalance = invoice.balanceAmount || invoice.total;
     setPaymentData({
-      paymentStatus: invoice.paymentStatus === "Recorded" ? "Pending" : "Recorded",
+      paymentStatus: "Recorded",
       paymentMode: invoice.paymentMode || "Cash",
-      amountRecorded: invoice.paymentStatus === "Recorded" ? 0 : invoice.total,
-      balanceAmount: invoice.paymentStatus === "Recorded" ? invoice.total : 0,
+      amountRecorded: currentBalance,
+      balanceAmount: 0,
       paymentDate: new Date().toISOString().split('T')[0]
     });
     setShowPaymentModal(true);
@@ -206,20 +207,22 @@ export default function Invoices() {
                     >
                       <button style={{ padding: "4px 8px", fontSize: "12px", backgroundColor: "#25d366", color: "white" }}>💬 WhatsApp</button>
                     </a>
-                    <button 
-                      onClick={() => handleOpenPaymentModal(inv)}
-                      style={{ 
-                        padding: "4px 8px", 
-                        fontSize: "12px", 
-                        backgroundColor: inv.paymentStatus === "Recorded" ? "#ffc107" : "#28a745", 
-                        color: "white",
-                        border: "none",
-                        cursor: "pointer",
-                        borderRadius: "4px"
-                      }}
-                    >
-                      {inv.paymentStatus === "Recorded" ? "Mark Unpaid" : "💰 Mark Paid"}
-                    </button>
+                    {inv.paymentStatus !== "Recorded" && (
+                      <button 
+                        onClick={() => handleOpenPaymentModal(inv)}
+                        style={{ 
+                          padding: "4px 8px", 
+                          fontSize: "12px", 
+                          backgroundColor: "#28a745", 
+                          color: "white",
+                          border: "none",
+                          cursor: "pointer",
+                          borderRadius: "4px"
+                        }}
+                      >
+                        💰 Mark Paid
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -249,22 +252,11 @@ export default function Invoices() {
             maxWidth: "500px",
             width: "90%",
             maxHeight: "90vh",
-            overflow: "auto"
-          }}>
-            <h3>Update Payment Status</h3>
+            overMark Invoice as Paid</h3>
             <p><strong>Invoice:</strong> {selectedInvoice.invoiceNumber}</p>
             <p><strong>Customer:</strong> {selectedInvoice.customerName}</p>
             <p><strong>Total Amount:</strong> ₹{selectedInvoice.total?.toFixed(2)}</p>
-
-            <div className="form-group">
-              <label>Payment Status</label>
-              <select
-                value={paymentData.paymentStatus}
-                onChange={(e) => setPaymentData({...paymentData, paymentStatus: e.target.value})}
-                className="form-select"
-              >
-                <option value="Recorded">Recorded (Paid)</option>
-                <option value="Pending">Pending (Unpaid)</option>
+            <p><strong>Current Balance:</strong> ₹{(selectedInvoice.balanceAmount || selectedInvoice.total)?.toFixed(2)}</poption value="Pending">Pending (Unpaid)</option>
               </select>
             </div>
 
