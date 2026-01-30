@@ -9,6 +9,7 @@ const InvoiceSchema = new mongoose.Schema({
     {
       productName: { type: String, required: true },
       sizeMM: { type: Number, required: true },
+      sizeLabel: { type: String },
       qty: { type: Number, required: true },
       price: { type: Number, required: true },
       discount: { type: Number, default: 0 },

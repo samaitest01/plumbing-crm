@@ -105,7 +105,7 @@ export default function Products() {
                       <tbody>
                         {product.variants.map((variant, vIdx) => (
                           <tr key={vIdx} style={{ borderBottom: "1px solid #ddd" }}>
-                            <td style={{ padding: "10px" }}>{variant.size_mm}</td>
+                            <td style={{ padding: "10px" }}>{variant.size_label || variant.size_mm}</td>
                             <td style={{ padding: "10px", textAlign: "right", fontWeight: "600", color: "#2563eb" }}>
                               ₹{variant.price.toFixed(2)}
                             </td>
