@@ -178,6 +178,7 @@ router.get("/:id/pdf", async (req, res) => {
     invoice.items.forEach((item, idx) => {
       const baseAmount = safe(item.baseAmount);
       const finalAmount = safe(item.amount);
+      const sizeLabel = item.sizeLabel || `${item.sizeMM}mm`;
       
       // Draw row cells with borders
       doc.lineWidth(1).strokeColor("#000").fillColor("#fff");
@@ -192,7 +193,7 @@ router.get("/:id/pdf", async (req, res) => {
       // Draw text
       doc.fillColor("#000").fontSize(8);
       doc.text((idx + 1).toString(), col1Start + 2, currentY + 3, { width: col1Width - 4, align: "center" });
-      doc.text(`${item.productName} (${item.sizeMM}mm)`, col2Start + 5, currentY + 3, { width: col2Width - 10, ellipsis: true });
+      doc.text(`${item.productName} (${sizeLabel})`, col2Start + 5, currentY + 3, { width: col2Width - 10, ellipsis: true });
       doc.text(item.qty.toString(), col3Start + 2, currentY + 3, { width: col3Width - 4, align: "center" });
       doc.text(safe(item.price).toFixed(2), col4Start + 2, currentY + 3, { width: col4Width - 4, align: "right" });
       doc.text(baseAmount.toFixed(2), col5Start + 2, currentY + 3, { width: col5Width - 4, align: "right" });

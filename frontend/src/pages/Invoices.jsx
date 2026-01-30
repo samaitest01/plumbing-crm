@@ -252,13 +252,13 @@ export default function Invoices() {
             maxWidth: "500px",
             width: "90%",
             maxHeight: "90vh",
-            overMark Invoice as Paid</h3>
+            overflow: "auto"
+          }}>
+            <h3>Mark Invoice as Paid</h3>
             <p><strong>Invoice:</strong> {selectedInvoice.invoiceNumber}</p>
             <p><strong>Customer:</strong> {selectedInvoice.customerName}</p>
             <p><strong>Total Amount:</strong> ₹{selectedInvoice.total?.toFixed(2)}</p>
-            <p><strong>Current Balance:</strong> ₹{(selectedInvoice.balanceAmount || selectedInvoice.total)?.toFixed(2)}</poption value="Pending">Pending (Unpaid)</option>
-              </select>
-            </div>
+            <p><strong>Current Balance:</strong> ₹{(selectedInvoice.balanceAmount || selectedInvoice.total)?.toFixed(2)}</p>
 
             <div className="form-group">
               <label>Payment Mode</label>

@@ -25,6 +25,7 @@ export default function CreateInvoice() {
 
   const [productId, setProductId] = useState("");
   const [productName, setProductName] = useState("");
+  const [productSearch, setProductSearch] = useState("");
   const [sizeMM, setSizeMM] = useState("");
   const [qty, setQty] = useState("");
   const [lineDiscount, setLineDiscount] = useState("");
@@ -54,13 +55,35 @@ export default function CreateInvoice() {
     if (p) {
       setProductName(p.name);
       setVariants(p.variants);
+      setProductSearch(p.name);
     } else {
       setVariants([]);
     }
   };
 
-  const price =
-    variants.find(v => v.size_mm === Number(sizeMM))?.price || 0;
+  const handleProductInputChange = (value) => {
+    setProductSearch(value);
+
+    const all = systems.flatMap(s => s.products || []);
+    const p = all.find(x => x.name.toLowerCase() === value.toLowerCase());
+
+    if (p) {
+      setProductId(p.id);
+      setProductName(p.name);
+      setVariants(p.variants);
+    } else {
+      setProductId("");
+      setProductName("");
+      setVariants([]);
+    }
+  };
+
+  const selectedVariant = variants.find(v => (
+    v.size_label === sizeMM ||
+    String(v.size_mm) === sizeMM
+  ));
+
+  const price = selectedVariant?.price || 0;
 
   const handleAddOrUpdate = () => {
     if (!productId || !sizeMM || !qty) return;
@@ -73,7 +96,8 @@ export default function CreateInvoice() {
       id: editId || Date.now(),
       productId,
       productName,
-      sizeMM,
+      sizeMM: selectedVariant?.size_mm ?? (Number(sizeMM) || 0),
+      sizeLabel: selectedVariant?.size_label || undefined,
       qty: Number(qty),
       price,
       discount: discountPct,
@@ -90,6 +114,7 @@ export default function CreateInvoice() {
     setEditId(null);
     setProductId("");
     setProductName("");
+    setProductSearch("");
     setVariants([]);
     setSizeMM("");
     setQty("");
@@ -100,7 +125,8 @@ export default function CreateInvoice() {
     setEditId(i.id);
     setProductId(i.productId);
     setProductName(i.productName);
-    setSizeMM(i.sizeMM);
+    setProductSearch(i.productName);
+    setSizeMM(i.sizeLabel || String(i.sizeMM));
     setQty(i.qty);
     setLineDiscount(i.discount);
 
@@ -127,6 +153,11 @@ export default function CreateInvoice() {
   const handleDelete = id => {
     setItems(items.filter(i => i.id !== id));
   };
+
+  const allProducts = systems.flatMap(s => s.products || []);
+  const filteredProducts = productSearch
+    ? allProducts.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()))
+    : allProducts;
 
   const totalPrice = items.reduce((s, i) => s + i.baseAmount, 0);
   const totalAmount = items.reduce((s, i) => s + i.amount, 0);
@@ -283,12 +314,19 @@ export default function CreateInvoice() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem", marginBottom: "1rem", alignItems: "flex-end" }}>
         <div>
           <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Product</label>
-          <select value={productId} onChange={handleProductChange} className="form-select" style={{ width: "100%" }}>
-            <option value="">Product</option>
-            {systems.flatMap(s => (s.products || [])).map(p =>
-              <option key={p.id} value={p.id}>{p.name}</option>
-            )}
-          </select>
+          <input
+            placeholder="Search or select product"
+            value={productSearch}
+            onChange={e => handleProductInputChange(e.target.value)}
+            className="form-input"
+            style={{ width: "100%" }}
+            list="product-options"
+          />
+          <datalist id="product-options">
+            {filteredProducts.map(p => (
+              <option key={p.id} value={p.name} />
+            ))}
+          </datalist>
         </div>
 
         <div>
@@ -296,7 +334,9 @@ export default function CreateInvoice() {
           <select value={sizeMM} onChange={e => setSizeMM(e.target.value)} className="form-select" style={{ width: "100%" }}>
             <option value="">Size</option>
             {variants.map(v =>
-              <option key={v.size_mm} value={v.size_mm}>{v.size_mm} mm</option>
+              <option key={`${v.size_mm}-${v.size_label || ""}`} value={v.size_label || String(v.size_mm)}>
+                {v.size_label || `${v.size_mm} mm`}
+              </option>
             )}
           </select>
         </div>
@@ -348,7 +388,7 @@ export default function CreateInvoice() {
                 <tr key={i.id}>
                   <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>{index + 1}</td>
                   <td style={{ border: "1px solid #ccc", padding: "10px" }}>{i.productName}</td>
-                  <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>{i.sizeMM} mm</td>
+                  <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>{i.sizeLabel || `${i.sizeMM} mm`}</td>
                   <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>{i.qty}</td>
                   <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "right" }}>₹{i.price.toFixed(2)}</td>
                   <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>{i.discount}%</td>
