@@ -74,7 +74,21 @@ export default function Invoices() {
   };
 
   const getWhatsAppLink = (inv) => {
-    const message = `Hi ${inv.customerName}, your invoice #${inv.invoiceNumber} for ₹${inv.total} is ready. Click here to download: ${API_BASE_URL}/api/invoices/${inv._id}/pdf`;
+    const date = new Date(inv.createdAt).toLocaleDateString('en-IN');
+    const paidAmount = inv.amountRecorded || 0;
+    const balance = inv.balanceAmount || 0;
+    
+    let message = `*INVOICE FROM NATIONAL TRADERS*\n\n`;
+    message += `📋 *Invoice No:* ${inv.invoiceNumber}\n`;
+    message += `📅 *Date:* ${date}\n`;
+    message += `👤 *Customer:* ${inv.customerName}\n\n`;
+    message += `💰 *Total Amount:* ₹${inv.total}\n`;
+    message += `✅ *Paid:* ₹${paidAmount}\n`;
+    message += `⏳ *Balance:* ₹${balance}\n\n`;
+    message += `*Payment Status:* ${inv.paymentStatus || 'Pending'}\n\n`;
+    message += `_Note: For the PDF invoice, please visit our office or contact us at 9595918751_\n\n`;
+    message += `Thank you for your business! 🙏`;
+    
     const encoded = encodeURIComponent(message);
     return `https://wa.me/${inv.customerMobile}?text=${encoded}`;
   };

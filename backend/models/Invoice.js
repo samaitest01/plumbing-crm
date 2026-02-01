@@ -48,20 +48,29 @@ InvoiceSchema.index({ customerMobile: 1, createdAt: -1 });
 InvoiceSchema.index({ invoiceNumber: 1 });
 InvoiceSchema.index({ createdAt: -1 });
 
-// Pre-save middleware to generate unique short invoice number
+// Pre-save middleware to generate unique invoice number: INVDDMMYYMMSS
 InvoiceSchema.pre('save', async function() {
   if (!this.invoiceNumber) {
     let isUnique = false;
     let invoiceNumber;
     let attempts = 0;
     
-    while (!isUnique && attempts < 10) {
+    while (!isUnique && attempts < 100) {
       attempts++;
-      const letters = Math.random().toString(36).substring(2, 4).toUpperCase();
-      const numbers = Math.floor(Math.random() * 999999)
-        .toString()
-        .padStart(5, '0');
-      invoiceNumber = `${letters}${numbers}`;
+      
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = String(now.getFullYear()).slice(-2);
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      
+      invoiceNumber = `INV${day}${month}${year}${minutes}${seconds}`;
+      
+      // If collision, add attempt counter
+      if (attempts > 1) {
+        invoiceNumber += String(attempts).padStart(2, '0');
+      }
       
       // Check if invoice number already exists
       const existing = await this.constructor.findOne({ invoiceNumber });

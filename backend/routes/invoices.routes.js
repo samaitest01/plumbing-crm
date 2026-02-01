@@ -97,146 +97,190 @@ router.get("/:id/pdf", async (req, res) => {
 
     const safe = (n) => (typeof n === "number" ? n : 0);
 
-    const doc = new PDFDocument({ margin: 40 });
+    const doc = new PDFDocument({ margin: 30, size: 'A4' });
     res.setHeader("Content-Type", "application/pdf");
     doc.pipe(res);
 
+    const pageWidth = 535; // A4 width - margins
+    const leftMargin = 30;
+    let currentY = 30;
+
     // HEADER
-    doc.fontSize(20).text(
-      "National Traders",
-      { align: "center" }
-    );
-    doc.fontSize(10).text(
-      "Behind High School Ground, Pathri - 431506\nMujahid Shaikh | 9595918751",
-      { align: "center" }
-    );
-
-    doc.moveDown();
-    doc.fontSize(14).text("INVOICE", { underline: true });
-
-    doc.moveDown(0.5);
-    doc.fontSize(10);
-    doc.text(`Invoice No: ${invoice.invoiceNumber}`);
-    doc.text(`Date: ${new Date(invoice.createdAt).toLocaleDateString()}`);
-    doc.text(`Customer: ${invoice.customerName}`);
-    doc.text(`Mobile: ${invoice.customerMobile}`);
-
-    doc.moveDown();
-
-    // TABLE WITH DETAILED FORMAT (Sr No, Particulars, Qty, Rate, Gross, Disc%, Taxable)
-    const tableTop = doc.y;
-    const pageWidth = 595; // A4 width in points
-    const leftMargin = 40;
-    const rightMargin = 40;
+    doc.fontSize(22).font("Helvetica-Bold").fillColor("#000").text("National Traders", { align: "center" });
+    doc.fontSize(9).font("Helvetica").fillColor("#000").text("Behind High School Ground, Pathri - 431506 | Mujahid Shaikh | 9595918751", { align: "center" });
     
-    // Column positions and widths
-    const col1Start = leftMargin;      // Sr No
-    const col2Start = col1Start + 25;  // Particulars
-    const col3Start = col2Start + 280; // Qty
-    const col4Start = col3Start + 40;  // Rate
-    const col5Start = col4Start + 50;  // Gross
-    const col6Start = col5Start + 55;  // Disc%
-    const col7Start = col6Start + 50;  // Taxable
+    currentY = doc.y + 10;
+
+    // INVOICE TITLE
+    doc.fontSize(16).font("Helvetica-Bold").fillColor("#000");
+    doc.text("INVOICE", leftMargin, currentY);
     
-    const col1Width = 25;
-    const col2Width = 280;
-    const col3Width = 40;
-    const col4Width = 50;
-    const col5Width = 55;
-    const col6Width = 50;
-    const col7Width = 50;
+    currentY = doc.y + 8;
     
-    const rowHeight = 20;
-
-    // Table Header with borders
-    doc.lineWidth(1).strokeColor("#000");
-    doc.fillColor("#fff");
+    // Draw info box with black border
+    const infoBoxHeight = 50;
+    doc.lineWidth(1.5).strokeColor("#000").fillColor("#fff");
+    doc.rect(leftMargin, currentY, pageWidth, infoBoxHeight).fillAndStroke();
     
-    // Draw header row cells
-    doc.rect(col1Start, tableTop, col1Width, rowHeight).fillAndStroke();
-    doc.rect(col2Start, tableTop, col2Width, rowHeight).fillAndStroke();
-    doc.rect(col3Start, tableTop, col3Width, rowHeight).fillAndStroke();
-    doc.rect(col4Start, tableTop, col4Width, rowHeight).fillAndStroke();
-    doc.rect(col5Start, tableTop, col5Width, rowHeight).fillAndStroke();
-    doc.rect(col6Start, tableTop, col6Width, rowHeight).fillAndStroke();
-    doc.rect(col7Start, tableTop, col7Width, rowHeight).fillAndStroke();
+    doc.fontSize(8).font("Helvetica").fillColor("#000");
+    const col1 = leftMargin + 10;
+    const col2 = leftMargin + 200;
+    const col3 = leftMargin + 350;
+    
+    doc.text(`Invoice No: ${invoice.invoiceNumber}`, col1, currentY + 5);
+    doc.text(`Date: ${new Date(invoice.createdAt).toLocaleDateString('en-IN')}`, col2, currentY + 5);
+    doc.text(`Customer: ${invoice.customerName}`, col1, currentY + 20);
+    doc.text(`Mobile: ${invoice.customerMobile}`, col2, currentY + 20);
+    doc.text(`Status: ${invoice.paymentStatus || 'Pending'}`, col3, currentY + 5);
+    doc.text(`Mode: ${invoice.paymentMode || 'N/A'}`, col3, currentY + 20);
+    
+    currentY += infoBoxHeight + 12;
 
-    doc.fillColor("#000");
-    doc.fontSize(8).font("Helvetica-Bold");
-    doc.text("Sr", col1Start + 2, tableTop + 4, { width: col1Width - 4, align: "center" });
-    doc.text("Particulars", col2Start + 5, tableTop + 4, { width: col2Width - 10 });
-    doc.text("Qty", col3Start + 2, tableTop + 4, { width: col3Width - 4, align: "center" });
-    doc.text("Rate", col4Start + 2, tableTop + 4, { width: col4Width - 4, align: "center" });
-    doc.text("Gross", col5Start + 2, tableTop + 4, { width: col5Width - 4, align: "center" });
-    doc.text("Disc%", col6Start + 2, tableTop + 4, { width: col6Width - 4, align: "center" });
-    doc.text("Taxable", col7Start + 2, tableTop + 4, { width: col7Width - 4, align: "center" });
+    // ITEMS TABLE
+    const tableTop = currentY;
+    const headerHeight = 18;
+    const rowHeight = 16;
+    
+    // Column widths
+    const colSr = 30;
+    const colParticulars = 230;
+    const colQty = 40;
+    const colRate = 55;
+    const colGross = 55;
+    const colDisc = 45;
+    const colTaxable = 60;
+    
+    let colX = leftMargin;
+    const columns = [
+      { width: colSr, label: "Sr", align: "center" },
+      { width: colParticulars, label: "Particulars", align: "left" },
+      { width: colQty, label: "Qty", align: "center" },
+      { width: colRate, label: "Rate", align: "right" },
+      { width: colGross, label: "Gross", align: "right" },
+      { width: colDisc, label: "Disc%", align: "center" },
+      { width: colTaxable, label: "Taxable", align: "right" }
+    ];
 
-    doc.font("Helvetica");
-    let currentY = tableTop + rowHeight;
+    // Header row with black background
+    doc.lineWidth(1).strokeColor("#000").fillColor("#000");
+    doc.rect(leftMargin, tableTop, pageWidth, headerHeight).fillAndStroke();
+    
+    doc.fontSize(8).font("Helvetica-Bold").fillColor("#fff");
+    colX = leftMargin;
+    columns.forEach(col => {
+      doc.text(col.label, colX + 3, tableTop + 3, { width: col.width - 6, align: col.align });
+      colX += col.width;
+    });
 
-    // Table Rows with borders
+    // Data rows
+    currentY = tableTop + headerHeight;
+    doc.fontSize(7).font("Helvetica").fillColor("#000");
+    
     invoice.items.forEach((item, idx) => {
       const baseAmount = safe(item.baseAmount);
       const finalAmount = safe(item.amount);
       const sizeLabel = item.sizeLabel || `${item.sizeMM}mm`;
       
-      // Draw row cells with borders
-      doc.lineWidth(1).strokeColor("#000").fillColor("#fff");
-      doc.rect(col1Start, currentY, col1Width, rowHeight).fillAndStroke();
-      doc.rect(col2Start, currentY, col2Width, rowHeight).fillAndStroke();
-      doc.rect(col3Start, currentY, col3Width, rowHeight).fillAndStroke();
-      doc.rect(col4Start, currentY, col4Width, rowHeight).fillAndStroke();
-      doc.rect(col5Start, currentY, col5Width, rowHeight).fillAndStroke();
-      doc.rect(col6Start, currentY, col6Width, rowHeight).fillAndStroke();
-      doc.rect(col7Start, currentY, col7Width, rowHeight).fillAndStroke();
-
-      // Draw text
-      doc.fillColor("#000").fontSize(8);
-      doc.text((idx + 1).toString(), col1Start + 2, currentY + 3, { width: col1Width - 4, align: "center" });
-      doc.text(`${item.productName} (${sizeLabel})`, col2Start + 5, currentY + 3, { width: col2Width - 10, ellipsis: true });
-      doc.text(item.qty.toString(), col3Start + 2, currentY + 3, { width: col3Width - 4, align: "center" });
-      doc.text(safe(item.price).toFixed(2), col4Start + 2, currentY + 3, { width: col4Width - 4, align: "right" });
-      doc.text(baseAmount.toFixed(2), col5Start + 2, currentY + 3, { width: col5Width - 4, align: "right" });
-      doc.text(safe(item.discount).toString(), col6Start + 2, currentY + 3, { width: col6Width - 4, align: "center" });
-      doc.text(finalAmount.toFixed(2), col7Start + 2, currentY + 3, { width: col7Width - 4, align: "right" });
+      doc.lineWidth(0.5).strokeColor("#000").fillColor("#fff");
+      doc.rect(leftMargin, currentY, pageWidth, rowHeight).fillAndStroke();
+      
+      // Draw cells
+      colX = leftMargin;
+      
+      // Sr
+      doc.text((idx + 1).toString(), colX + 3, currentY + 2, { width: colSr - 6, align: "center" });
+      colX += colSr;
+      
+      // Particulars
+      doc.text(`${item.productName} (${sizeLabel})`, colX + 3, currentY + 2, { width: colParticulars - 6, ellipsis: true });
+      colX += colParticulars;
+      
+      // Qty
+      doc.text(item.qty.toString(), colX + 3, currentY + 2, { width: colQty - 6, align: "center" });
+      colX += colQty;
+      
+      // Rate
+      doc.text(safe(item.price).toFixed(2), colX + 3, currentY + 2, { width: colRate - 6, align: "right" });
+      colX += colRate;
+      
+      // Gross
+      doc.text(baseAmount.toFixed(2), colX + 3, currentY + 2, { width: colGross - 6, align: "right" });
+      colX += colGross;
+      
+      // Disc%
+      doc.text(safe(item.discount).toString(), colX + 3, currentY + 2, { width: colDisc - 6, align: "center" });
+      colX += colDisc;
+      
+      // Taxable
+      doc.text(finalAmount.toFixed(2), colX + 3, currentY + 2, { width: colTaxable - 6, align: "right" });
       
       currentY += rowHeight;
     });
 
-    // Totals section with proper spacing
-    currentY += 10;
-    doc.fontSize(10).font("Helvetica");
+    // TOTALS SECTION
+    currentY += 2;
+    const summaryRowHeight = 16;
+    const summaryBoxWidth = pageWidth;
     
-    doc.text("Subtotal (Gross):", leftMargin, currentY);
-    doc.text(`₹${safe(invoice.subTotal).toFixed(2)}`, leftMargin + 350, currentY, { width: 150, align: "right" });
+    // Subtotal row
+    doc.lineWidth(0.5).strokeColor("#000").fillColor("#fff");
+    doc.rect(leftMargin, currentY, summaryBoxWidth, summaryRowHeight).fillAndStroke();
+    doc.fontSize(8).font("Helvetica").fillColor("#000");
+    doc.text("Subtotal (Gross):", leftMargin + 5, currentY + 2);
+    doc.text(`Rs. ${safe(invoice.subTotal).toFixed(2)}`, leftMargin + 5, currentY + 2, { width: summaryBoxWidth - 10, align: "right" });
+    
+    currentY += summaryRowHeight;
+    
+    // Discount row
+    doc.lineWidth(0.5).strokeColor("#000").fillColor("#fff");
+    doc.rect(leftMargin, currentY, summaryBoxWidth, summaryRowHeight).fillAndStroke();
+    doc.fontSize(8).font("Helvetica").fillColor("#000");
+    doc.text("Total Discount:", leftMargin + 5, currentY + 2);
+    doc.text(`Rs. ${(safe(invoice.subTotal) - safe(invoice.total)).toFixed(2)}`, leftMargin + 5, currentY + 2, { width: summaryBoxWidth - 10, align: "right" });
+    
+    currentY += summaryRowHeight;
+    
+    // Total Amount row - Bold with black border
+    doc.lineWidth(1).strokeColor("#000").fillColor("#fff");
+    doc.rect(leftMargin, currentY, summaryBoxWidth, summaryRowHeight + 2).fillAndStroke();
+    doc.fontSize(9).font("Helvetica-Bold").fillColor("#000");
+    doc.text("TOTAL AMOUNT:", leftMargin + 5, currentY + 2);
+    doc.text(`Rs. ${safe(invoice.total).toFixed(2)}`, leftMargin + 5, currentY + 2, { width: summaryBoxWidth - 10, align: "right" });
+    
+    currentY += summaryRowHeight + 2;
+    
+    // PAYMENT DETAILS SECTION
+    currentY += 8;
+    const paymentBoxHeight = 55;
+    
+    doc.lineWidth(1).strokeColor("#000").fillColor("#fff");
+    doc.rect(leftMargin, currentY, summaryBoxWidth, paymentBoxHeight).fillAndStroke();
+    
+    doc.fontSize(9).font("Helvetica-Bold").fillColor("#000");
+    doc.text("PAYMENT DETAILS", leftMargin + 5, currentY + 3);
+    
+    // Internal divider line
+    doc.lineWidth(0.5).strokeColor("#000");
+    doc.moveTo(leftMargin, currentY + 15).lineTo(leftMargin + summaryBoxWidth, currentY + 15).stroke();
     
     currentY += 18;
-    doc.text("Total Discount:", leftMargin, currentY);
-    doc.text(`₹${(safe(invoice.subTotal) - safe(invoice.total)).toFixed(2)}`, leftMargin + 350, currentY, { width: 150, align: "right" });
+    doc.fontSize(8).font("Helvetica").fillColor("#000");
     
-    currentY += 18;
-    doc.fontSize(12).font("Helvetica-Bold");
-    doc.text("Total (Taxable):", leftMargin, currentY);
-    doc.text(`₹${safe(invoice.total).toFixed(2)}`, leftMargin + 350, currentY, { width: 150, align: "right" });
+    const paymentCol1 = leftMargin + 5;
+    const paymentCol2 = leftMargin + summaryBoxWidth / 2;
+    
+    doc.text(`Status: ${invoice.paymentStatus || "N/A"}`, paymentCol1, currentY);
+    doc.text(`Amount Paid: Rs. ${safe(invoice.amountRecorded).toFixed(2)}`, paymentCol2, currentY);
+    
+    currentY += 15;
+    doc.text(`Payment Mode: ${invoice.paymentMode || "N/A"}`, paymentCol1, currentY);
+    doc.text(`Balance Due: Rs. ${safe(invoice.balanceAmount).toFixed(2)}`, paymentCol2, currentY);
 
-    // PAYMENT DETAILS SECTION (MOCKED - For Record Keeping Only)
-    currentY += 25;
-    doc.fontSize(12).font("Helvetica-Bold").text("RECORD KEEPING DETAILS", leftMargin, currentY);
-    doc.fontSize(8).font("Helvetica").text("(Information only - no actual payment processing)", leftMargin, currentY + 13);
+    // Footer
+    currentY += 30;
+    doc.fontSize(7).font("Helvetica").fillColor("#666");
+    doc.text("This is a computer-generated invoice. Payment information is for record keeping only.", leftMargin, currentY, { align: "center", width: pageWidth });
     
-    currentY += 28;
-    doc.fontSize(10).font("Helvetica");
-    doc.text(`Payment Status: ${invoice.paymentStatus || "N/A"}`, leftMargin, currentY);
-    
-    currentY += 15;
-    doc.text(`Payment Mode: ${invoice.paymentMode || "N/A"}`, leftMargin, currentY);
-    
-    currentY += 15;
-    doc.text(`Amount Recorded: ₹${safe(invoice.amountRecorded).toFixed(2)}`, leftMargin, currentY);
-    
-    currentY += 15;
-    doc.text(`Balance Amount: ₹${safe(invoice.balanceAmount).toFixed(2)}`, leftMargin, currentY);
-
     doc.end();
   } catch (err) {
     console.error("PDF ERROR:", err);

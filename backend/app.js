@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 require("dotenv").config();
 
 const app = express();
@@ -17,8 +18,12 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Serve static frontend files
+const frontendPath = path.join(__dirname, "../frontend/dist");
+app.use(express.static(frontendPath));
+
 // Health check endpoint
-app.get("/", (req, res) => {
+app.get("/api/health", (req, res) => {
   res.json({ 
     message: "Plumbing CRM Backend Running",
     status: "healthy",
@@ -32,6 +37,11 @@ app.use("/api/customers", require("./routes/customers.routes"));
 app.use("/api/products", require("./routes/products.routes"));
 app.use("/api/invoices", require("./routes/invoices.routes"));
 app.use("/api/reports", require("./routes/reports.routes"));
+
+// SPA fallback - serve index.html for all non-API routes
+app.get("*", (req, res) => {
+  res.sendFile(path.join(frontendPath, "index.html"));
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {

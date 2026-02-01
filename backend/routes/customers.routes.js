@@ -28,12 +28,8 @@ router.get("/:mobile", async (req, res) => {
     // Calculate totals
     const totalInvoices = invoices.length;
     const totalBilled = invoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
-    const totalRecorded = invoices
-      .filter(inv => inv.paymentStatus === "Recorded")
-      .reduce((sum, inv) => sum + (inv.total || 0), 0);
-    const totalPending = invoices
-      .filter(inv => inv.paymentStatus === "Pending")
-      .reduce((sum, inv) => sum + (inv.total - (inv.amountRecorded || 0)), 0);
+    const totalPaid = invoices.reduce((sum, inv) => sum + (inv.amountRecorded || 0), 0);
+    const totalBalance = invoices.reduce((sum, inv) => sum + (inv.balanceAmount || 0), 0);
 
     res.json({
       customer,
@@ -41,8 +37,8 @@ router.get("/:mobile", async (req, res) => {
       stats: {
         totalInvoices,
         totalBilled: totalBilled.toFixed(2),
-        totalRecorded: totalRecorded.toFixed(2),
-        totalPending: totalPending.toFixed(2)
+        totalPaid: totalPaid.toFixed(2),
+        totalBalance: totalBalance.toFixed(2)
       }
     });
   } catch (err) {

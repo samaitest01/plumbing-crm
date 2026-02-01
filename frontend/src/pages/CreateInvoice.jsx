@@ -447,7 +447,14 @@ export default function CreateInvoice() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1.5rem", marginBottom: "1rem" }}>
         <div>
           <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", fontSize: "14px" }}>Payment Status</label>
-          <select value={paymentStatus} onChange={e => setPaymentStatus(e.target.value)} className="form-select" style={{ width: "100%" }}>
+          <select value={paymentStatus} onChange={e => {
+            setPaymentStatus(e.target.value);
+            if (e.target.value === "Recorded") {
+              setAmountRecorded(totalAmount);
+            } else {
+              setAmountRecorded(0);
+            }
+          }} className="form-select" style={{ width: "100%" }}>
             <option value="Pending">Pending</option>
             <option value="Recorded">Recorded</option>
           </select>
@@ -464,19 +471,34 @@ export default function CreateInvoice() {
           </select>
         </div>
 
-        {paymentStatus === "Pending" && (
-          <div>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", fontSize: "14px" }}>Amount Recorded</label>
-            <input 
-              type="number" 
-              value={amountRecorded} 
-              onChange={e => setAmountRecorded(e.target.value)}
-              placeholder="0"
-              className="form-input"
-              style={{ width: "100%" }}
-            />
-          </div>
-        )}
+        <div>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", fontSize: "14px" }}>
+            Amount Paid
+          </label>
+          <input 
+            type="number" 
+            value={amountRecorded} 
+            onChange={e => setAmountRecorded(Number(e.target.value))}
+            placeholder="0"
+            min="0"
+            max={totalAmount}
+            className="form-input"
+            style={{ width: "100%" }}
+          />
+        </div>
+
+        <div>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", fontSize: "14px" }}>
+            Balance Amount
+          </label>
+          <input 
+            type="number" 
+            value={(totalAmount - (Number(amountRecorded) || 0)).toFixed(2)}
+            disabled
+            className="form-input"
+            style={{ width: "100%", backgroundColor: "#f5f5f5", cursor: "not-allowed" }}
+          />
+        </div>
       </div>
 
       <hr />
