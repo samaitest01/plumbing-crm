@@ -27,3 +27,6 @@ Thumbs.db
 .idea
 *.swp
 *.swo
+
+# Bundle directory (deployment package with MongoDB binaries)
+bundle/
