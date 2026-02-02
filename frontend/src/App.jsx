@@ -10,65 +10,43 @@ import Products from "./pages/Products";
 import Reports from "./pages/Reports";
 import Login from "./pages/Login";
 
-function ProtectedRoute({ children }) {
-  const { user, loading } = useContext(AuthContext);
-  
-  if (loading) {
-    return <div style={{ textAlign: "center", padding: "2rem" }}>Loading...</div>;
-  }
-  
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return children;
-}
+// COMMENTED OUT: Authentication disabled for development
+// function ProtectedRoute({ children }) {
+//   const { user, loading } = useContext(AuthContext);
+//   
+//   if (loading) {
+//     return <div style={{ textAlign: "center", padding: "2rem" }}>Loading...</div>;
+//   }
+//   
+//   if (!user) {
+//     return <Navigate to="/login" replace />;
+//   }
+//   
+//   return children;
+// }
 
 export default function App() {
-  const { user } = useContext(AuthContext);
+  // const { user } = useContext(AuthContext); // COMMENTED OUT: Auth disabled
 
   return (
     <>
-      {user && <Navbar />}
+      <Navbar />
 
       <Routes>
-        <Route path="/login" element={<Login />} />
+        {/* COMMENTED OUT: Login disabled for development */}
+        {/* <Route path="/login" element={<Login />} /> */}
         
-        <Route path="/" element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        } />
+        <Route path="/" element={<Dashboard />} />
         
-        <Route path="/billing" element={
-          <ProtectedRoute>
-            <CreateInvoice />
-          </ProtectedRoute>
-        } />
+        <Route path="/billing" element={<CreateInvoice />} />
         
-        <Route path="/invoices" element={
-          <ProtectedRoute>
-            <Invoices />
-          </ProtectedRoute>
-        } />
+        <Route path="/invoices" element={<Invoices />} />
         
-        <Route path="/customers" element={
-          <ProtectedRoute>
-            <Customers />
-          </ProtectedRoute>
-        } />
+        <Route path="/customers" element={<Customers />} />
         
-        <Route path="/products" element={
-          <ProtectedRoute>
-            <Products />
-          </ProtectedRoute>
-        } />
+        <Route path="/products" element={<Products />} />
         
-        <Route path="/reports" element={
-          <ProtectedRoute>
-            <Reports />
-          </ProtectedRoute>
-        } />
+        <Route path="/reports" element={<Reports />} />
       </Routes>
     </>
   );
