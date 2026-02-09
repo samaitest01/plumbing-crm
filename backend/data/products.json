@@ -1,66 +1,482 @@
 [
   {
     "system": "CPVC",
-    "category": "CPVC Plumbing System",
+    "category": "CPVC FITTINGS",
     "products": [
       {
-        "id": "cpvc-pipe-sdr11",
-        "name": "CPVC Pipe SDR 11",
-        "unit": "length",
-        "length_m": 3,
+        "id": "coupler",
+        "name": "Coupler",
+        "unit": "pcs",
         "variants": [
-          { "size_mm": 15, "price": 75 },
-          { "size_mm": 20, "price": 95 },
-          { "size_mm": 25, "price": 120 },
-          { "size_mm": 32, "price": 165 },
-          { "size_mm": 40, "price": 210 },
-          { "size_mm": 50, "price": 325 }
+          {
+            "size_mm": 15,
+            "price": 13
+          },
+          {
+            "size_mm": 20,
+            "price": 18
+          },
+          {
+            "size_mm": 25,
+            "price": 32
+          },
+          {
+            "size_mm": 32,
+            "price": 54
+          },
+          {
+            "size_mm": 40,
+            "price": 99
+          },
+          {
+            "size_mm": 50,
+            "price": 210
+          },
+          {
+            "size_mm": 2,
+            "price": 522
+          },
+          {
+            "size_mm": 3,
+            "price": 713
+          },
+          {
+            "size_mm": 4,
+            "price": 1065
+          }
         ]
       },
       {
-        "id": "cpvc-elbow",
-        "name": "CPVC Elbow 90°",
+        "id": "reducing-coupler",
+        "name": "Reducing Coupler",
         "unit": "pcs",
         "variants": [
-          { "size_mm": 15, "price": 18 },
-          { "size_mm": 20, "price": 28 },
-          { "size_mm": 25, "price": 45 },
-          { "size_mm": 32, "price": 75 },
-          { "size_mm": 40, "price": 115 },
-          { "size_mm": 50, "price": 185 }
+          {
+            "size_mm": 20,
+            "price": 20
+          },
+          {
+            "size_mm": 25,
+            "price": 38
+          },
+          {
+            "size_mm": 32,
+            "price": 78
+          },
+          {
+            "size_mm": 32,
+            "price": 84
+          },
+          {
+            "size_mm": 40,
+            "price": 135
+          },
+          {
+            "size_mm": 40,
+            "price": 134
+          },
+          {
+            "size_mm": 50,
+            "price": 225
+          },
+          {
+            "size_mm": 50,
+            "price": 246
+          }
         ]
       },
       {
-        "id": "cpvc-ball-valve",
-        "name": "CPVC Ball Valve",
+        "id": "elbow-90",
+        "name": "Elbow 90°",
         "unit": "pcs",
         "variants": [
-          { "size_mm": 15, "price": 180 },
-          { "size_mm": 20, "price": 240 },
-          { "size_mm": 25, "price": 320 },
-          { "size_mm": 32, "price": 450 },
-          { "size_mm": 40, "price": 650 },
-          { "size_mm": 50, "price": 980 }
+          {
+            "size_mm": 15,
+            "price": 18
+          },
+          {
+            "size_mm": 20,
+            "price": 22
+          },
+          {
+            "size_mm": 25,
+            "price": 47
+          },
+          {
+            "size_mm": 32,
+            "price": 87
+          },
+          {
+            "size_mm": 40,
+            "price": 165
+          },
+          {
+            "size_mm": 50,
+            "price": 345
+          },
+          {
+            "size_mm": 2,
+            "price": 818
+          },
+          {
+            "size_mm": 3,
+            "price": 1170
+          },
+          {
+            "size_mm": 4,
+            "price": 1860
+          }
         ]
-      }
-    ]
-  },
-  {
-    "system": "UPVC",
-    "category": "UPVC Plumbing System",
-    "products": [
+      },
       {
-        "id": "upvc-pipe",
-        "name": "UPVC Pipe",
-        "unit": "length",
-        "length_m": 3,
+        "id": "elbow-45",
+        "name": "Elbow 45°",
+        "unit": "pcs",
         "variants": [
-          { "size_mm": 15, "price": 55 },
-          { "size_mm": 20, "price": 75 },
-          { "size_mm": 25, "price": 95 },
-          { "size_mm": 32, "price": 135 },
-          { "size_mm": 40, "price": 170 },
-          { "size_mm": 50, "price": 260 }
+          {
+            "size_mm": 20,
+            "price": 27
+          },
+          {
+            "size_mm": 25,
+            "price": 45
+          },
+          {
+            "size_mm": 32,
+            "price": 98
+          },
+          {
+            "size_mm": 40,
+            "price": 177
+          },
+          {
+            "size_mm": 50,
+            "price": 405
+          },
+          {
+            "size_mm": 2,
+            "price": 1005
+          },
+          {
+            "size_mm": 3,
+            "price": 1575
+          },
+          {
+            "size_mm": 4,
+            "price": 2775
+          }
+        ]
+      },
+      {
+        "id": "reducing-elbow",
+        "name": "Reducing Elbow",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 25,
+            "price": 53
+          },
+          {
+            "size_mm": 20,
+            "price": 27
+          }
+        ]
+      },
+      {
+        "id": "tee",
+        "name": "Tee",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 15,
+            "price": 23
+          },
+          {
+            "size_mm": 20,
+            "price": 36
+          },
+          {
+            "size_mm": 25,
+            "price": 59
+          },
+          {
+            "size_mm": 32,
+            "price": 110
+          },
+          {
+            "size_mm": 40,
+            "price": 203
+          },
+          {
+            "size_mm": 50,
+            "price": 431
+          },
+          {
+            "size_mm": 2,
+            "price": 1128
+          },
+          {
+            "size_mm": 3,
+            "price": 1620
+          },
+          {
+            "size_mm": 4,
+            "price": 2925
+          }
+        ]
+      },
+      {
+        "id": "reducing-tee",
+        "name": "Reducing Tee",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 20,
+            "price": 54
+          },
+          {
+            "size_mm": 25,
+            "price": 77
+          },
+          {
+            "size_mm": 32,
+            "price": 165
+          },
+          {
+            "size_mm": 32,
+            "price": 146
+          },
+          {
+            "size_mm": 40,
+            "price": 183
+          },
+          {
+            "size_mm": 40,
+            "price": 188
+          },
+          {
+            "size_mm": 50,
+            "price": 390
+          },
+          {
+            "size_mm": 50,
+            "price": 360
+          },
+          {
+            "size_mm": 50,
+            "price": 338
+          }
+        ]
+      },
+      {
+        "id": "union",
+        "name": "Union",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 15,
+            "price": 63
+          },
+          {
+            "size_mm": 20,
+            "price": 90
+          },
+          {
+            "size_mm": 25,
+            "price": 128
+          },
+          {
+            "size_mm": 32,
+            "price": 153
+          },
+          {
+            "size_mm": 40,
+            "price": 278
+          },
+          {
+            "size_mm": 50,
+            "price": 480
+          },
+          {
+            "size_mm": 2,
+            "price": 1650
+          },
+          {
+            "size_mm": 3,
+            "price": 2565
+          },
+          {
+            "size_mm": 4,
+            "price": 2938
+          }
+        ]
+      },
+      {
+        "id": "end-cap",
+        "name": "End Cap",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 15,
+            "price": 9
+          },
+          {
+            "size_mm": 20,
+            "price": 16
+          },
+          {
+            "size_mm": 25,
+            "price": 25
+          },
+          {
+            "size_mm": 32,
+            "price": 48
+          },
+          {
+            "size_mm": 40,
+            "price": 59
+          },
+          {
+            "size_mm": 50,
+            "price": 128
+          },
+          {
+            "size_mm": 2,
+            "price": 375
+          },
+          {
+            "size_mm": 3,
+            "price": 533
+          },
+          {
+            "size_mm": 4,
+            "price": 938
+          }
+        ]
+      },
+      {
+        "id": "reducing-bush",
+        "name": "Reducing Bush",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 20,
+            "price": 17
+          },
+          {
+            "size_mm": 25,
+            "price": 22
+          },
+          {
+            "size_mm": 25,
+            "price": 21
+          },
+          {
+            "size_mm": 32,
+            "price": 41
+          },
+          {
+            "size_mm": 32,
+            "price": 33
+          },
+          {
+            "size_mm": 40,
+            "price": 54
+          },
+          {
+            "size_mm": 40,
+            "price": 53
+          },
+          {
+            "size_mm": 40,
+            "price": 45
+          },
+          {
+            "size_mm": 50,
+            "price": 105
+          },
+          {
+            "size_mm": 50,
+            "price": 113
+          },
+          {
+            "size_mm": 50,
+            "price": 102
+          }
+        ]
+      },
+      {
+        "id": "male-adaptor-plastic-threaded",
+        "name": "Male Adaptor Plastic Threaded",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 15,
+            "price": 15
+          },
+          {
+            "size_mm": 20,
+            "price": 27
+          },
+          {
+            "size_mm": 25,
+            "price": 42
+          },
+          {
+            "size_mm": 32,
+            "price": 63
+          },
+          {
+            "size_mm": 40,
+            "price": 78
+          },
+          {
+            "size_mm": 50,
+            "price": 149
+          }
+        ]
+      },
+      {
+        "id": "ball-valve",
+        "name": "Ball Valve",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 15,
+            "price": 150
+          },
+          {
+            "size_mm": 20,
+            "price": 233
+          },
+          {
+            "size_mm": 25,
+            "price": 368
+          },
+          {
+            "size_mm": 32,
+            "price": 645
+          },
+          {
+            "size_mm": 40,
+            "price": 1020
+          },
+          {
+            "size_mm": 50,
+            "price": 1770
+          },
+          {
+            "size_mm": 2,
+            "price": 7425
+          },
+          {
+            "size_mm": 3,
+            "price": 10275
+          },
+          {
+            "size_mm": 4,
+            "price": 16875
+          }
         ]
       }
     ]
