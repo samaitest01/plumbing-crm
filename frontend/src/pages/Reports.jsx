@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import PageWrapper from "../components/PageWrapper";
 import {
   fetchSalesTrends,
@@ -7,6 +7,43 @@ import {
   fetchPaymentStatus,
   fetchCustomerMetrics
 } from "../services/api";
+
+const TabButton = ({ label, isActive, onClick }) => (
+  <button
+    onClick={onClick}
+    style={{
+      padding: "10px 20px",
+      backgroundColor: isActive ? "#2563eb" : "#f5f5f5",
+      color: isActive ? "#fff" : "#333",
+      border: "none",
+      borderRadius: "6px",
+      cursor: "pointer",
+      fontSize: "14px",
+      fontWeight: "500",
+      transition: "all 0.3s"
+    }}
+  >
+    {label}
+  </button>
+);
+
+const StatBox = ({ label, value, subText, color = "#2563eb" }) => (
+  <div style={{
+    backgroundColor: "#fff",
+    padding: "1.5rem",
+    borderRadius: "8px",
+    border: "1px solid #ddd",
+    textAlign: "center"
+  }}>
+    <div style={{ fontSize: "13px", color: "#666", marginBottom: "0.5rem", fontWeight: "500" }}>
+      {label}
+    </div>
+    <div style={{ fontSize: "28px", fontWeight: "bold", color, marginBottom: "0.25rem" }}>
+      {value}
+    </div>
+    {subText && <div style={{ fontSize: "12px", color: "#999" }}>{subText}</div>}
+  </div>
+);
 
 export default function Reports() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -18,11 +55,7 @@ export default function Reports() {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("daily");
 
-  useEffect(() => {
-    fetchAllReports();
-  }, [period]);
-
-  const fetchAllReports = async () => {
+  const fetchAllReports = useCallback(async () => {
     setLoading(true);
     try {
       const [trends, byCustomer, byProduct, payment, metrics] = await Promise.all([
@@ -42,44 +75,12 @@ export default function Reports() {
       console.error("Failed to fetch reports:", err);
     }
     setLoading(false);
-  };
+  }, [period]);
 
-  const TabButton = ({ id, label }) => (
-    <button
-      onClick={() => setActiveTab(id)}
-      style={{
-        padding: "10px 20px",
-        backgroundColor: activeTab === id ? "#2563eb" : "#f5f5f5",
-        color: activeTab === id ? "#fff" : "#333",
-        border: "none",
-        borderRadius: "6px",
-        cursor: "pointer",
-        fontSize: "14px",
-        fontWeight: "500",
-        transition: "all 0.3s"
-      }}
-    >
-      {label}
-    </button>
-  );
-
-  const StatBox = ({ label, value, subText, color = "#2563eb" }) => (
-    <div style={{
-      backgroundColor: "#fff",
-      padding: "1.5rem",
-      borderRadius: "8px",
-      border: "1px solid #ddd",
-      textAlign: "center"
-    }}>
-      <div style={{ fontSize: "13px", color: "#666", marginBottom: "0.5rem", fontWeight: "500" }}>
-        {label}
-      </div>
-      <div style={{ fontSize: "28px", fontWeight: "bold", color, marginBottom: "0.25rem" }}>
-        {value}
-      </div>
-      {subText && <div style={{ fontSize: "12px", color: "#999" }}>{subText}</div>}
-    </div>
-  );
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchAllReports();
+  }, [fetchAllReports]);
 
   if (loading) {
     return <PageWrapper><p>Loading reports...</p></PageWrapper>;
@@ -94,10 +95,10 @@ export default function Reports() {
 
       {/* Tab Navigation */}
       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "2rem", flexWrap: "wrap" }}>
-        <TabButton id="overview" label="📊 Overview" />
-        <TabButton id="sales" label="💹 Sales Trends" />
-        <TabButton id="customers" label="👥 Top Customers" />
-        <TabButton id="products" label="📦 Top Products" />
+        <TabButton label="📊 Overview" isActive={activeTab === "overview"} onClick={() => setActiveTab("overview")} />
+        <TabButton label="💹 Sales Trends" isActive={activeTab === "sales"} onClick={() => setActiveTab("sales")} />
+        <TabButton label="👥 Top Customers" isActive={activeTab === "customers"} onClick={() => setActiveTab("customers")} />
+        <TabButton label="📦 Top Products" isActive={activeTab === "products"} onClick={() => setActiveTab("products")} />
       </div>
 
       {/* OVERVIEW TAB */}

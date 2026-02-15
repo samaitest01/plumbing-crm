@@ -1,6 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-import { useContext } from "react";
-import { AuthContext } from "./context/AuthContext";
+import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
 import CreateInvoice from "./pages/CreateInvoice";
@@ -8,7 +6,6 @@ import Invoices from "./pages/Invoices";
 import Customers from "./pages/Customers";
 import Products from "./pages/Products";
 import Reports from "./pages/Reports";
-import Login from "./pages/Login";
 
 // COMMENTED OUT: Authentication disabled for development
 // function ProtectedRoute({ children }) {

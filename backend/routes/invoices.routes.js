@@ -101,8 +101,9 @@ router.get("/:id/pdf", async (req, res) => {
     res.setHeader("Content-Type", "application/pdf");
     doc.pipe(res);
 
-    const pageWidth = 535; // A4 width - margins
     const leftMargin = 30;
+    const pageWidth = doc.page.width - leftMargin * 2;
+    const pageBottom = doc.page.height - 40;
     let currentY = 30;
 
     // HEADER
@@ -161,28 +162,38 @@ router.get("/:id/pdf", async (req, res) => {
       { width: colTaxable, label: "Taxable", align: "right" }
     ];
 
-    // Header row with black background
-    doc.lineWidth(1).strokeColor("#000").fillColor("#000");
-    doc.rect(leftMargin, tableTop, pageWidth, headerHeight).fillAndStroke();
-    
-    doc.fontSize(8).font("Helvetica-Bold").fillColor("#fff");
-    colX = leftMargin;
-    columns.forEach(col => {
-      doc.text(col.label, colX + 3, tableTop + 3, { width: col.width - 6, align: col.align });
-      colX += col.width;
-    });
+    const drawTableHeader = () => {
+      doc.lineWidth(1).strokeColor("#000").fillColor("#000");
+      doc.rect(leftMargin, currentY, pageWidth, headerHeight).fillAndStroke();
 
-    // Data rows
-    currentY = tableTop + headerHeight;
-    doc.fontSize(7).font("Helvetica").fillColor("#000");
+      doc.fontSize(8).font("Helvetica-Bold").fillColor("#fff");
+      colX = leftMargin;
+      columns.forEach(col => {
+        doc.text(col.label, colX + 3, currentY + 3, { width: col.width - 6, align: col.align });
+        colX += col.width;
+      });
+
+      currentY += headerHeight;
+      doc.fontSize(7).font("Helvetica").fillColor("#000");
+    };
+
+    currentY = tableTop;
+    drawTableHeader();
     
     invoice.items.forEach((item, idx) => {
       const baseAmount = safe(item.baseAmount);
       const finalAmount = safe(item.amount);
       const sizeLabel = item.sizeLabel || `${item.sizeMM}mm`;
       
+      if (currentY + rowHeight > pageBottom) {
+        doc.addPage();
+        currentY = 30;
+        drawTableHeader();
+      }
+
       doc.lineWidth(0.5).strokeColor("#000").fillColor("#fff");
       doc.rect(leftMargin, currentY, pageWidth, rowHeight).fillAndStroke();
+      doc.fillColor("#000");
       
       // Draw cells
       colX = leftMargin;
@@ -218,9 +229,15 @@ router.get("/:id/pdf", async (req, res) => {
     });
 
     // TOTALS SECTION
-    currentY += 2;
     const summaryRowHeight = 16;
+    const paymentBoxHeight = 55;
     const summaryBoxWidth = pageWidth;
+    const totalsHeight = (summaryRowHeight * 3) + paymentBoxHeight + 20;
+    if (currentY + totalsHeight > pageBottom) {
+      doc.addPage();
+      currentY = 30;
+    }
+    currentY += 2;
     
     // Subtotal row
     doc.lineWidth(0.5).strokeColor("#000").fillColor("#fff");
@@ -251,7 +268,6 @@ router.get("/:id/pdf", async (req, res) => {
     
     // PAYMENT DETAILS SECTION
     currentY += 8;
-    const paymentBoxHeight = 55;
     
     doc.lineWidth(1).strokeColor("#000").fillColor("#fff");
     doc.rect(leftMargin, currentY, summaryBoxWidth, paymentBoxHeight).fillAndStroke();

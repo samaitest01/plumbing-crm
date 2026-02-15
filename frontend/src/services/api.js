@@ -37,6 +37,9 @@ export const login = (data) => API.post("/auth/login", data);
 
 // Product APIs
 export const fetchAllProducts = () => API.get("/products");
+export const createProduct = (data) => API.post("/products", data);
+export const updateProduct = (system, productId, data) => API.put(`/products/${system}/${productId}`, data);
+export const deleteProduct = (system, productId) => API.delete(`/products/${system}/${productId}`);
 
 // Invoice APIs
 export const saveInvoice = (data) => API.post("/invoices", data);

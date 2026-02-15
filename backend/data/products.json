@@ -1,481 +1,490 @@
 [
   {
-    "system": "CPVC",
-    "category": "CPVC FITTINGS",
+    "system": "CPVC PLUMBING",
+    "category": "cPVC Plumbing",
     "products": [
       {
-        "id": "coupler",
-        "name": "Coupler",
+        "id": "cpvc-pipe-sdr-11-5-mtr",
+        "name": "cPVC Pipe SDR 11 (5 Mtr)",
         "unit": "pcs",
         "variants": [
           {
             "size_mm": 15,
-            "price": 13
+            "size_label": "1/2",
+            "price": 310
           },
           {
             "size_mm": 20,
-            "price": 18
+            "size_label": "3/4",
+            "price": 460
           },
           {
             "size_mm": 25,
-            "price": 32
+            "size_label": "1",
+            "price": 720
           },
           {
             "size_mm": 32,
-            "price": 54
+            "size_label": "1-1/4",
+            "price": 1150
           },
           {
             "size_mm": 40,
-            "price": 99
+            "size_label": "1-1/2",
+            "price": 1680
           },
           {
             "size_mm": 50,
-            "price": 210
-          },
-          {
-            "size_mm": 2,
-            "price": 522
-          },
-          {
-            "size_mm": 3,
-            "price": 713
-          },
-          {
-            "size_mm": 4,
-            "price": 1065
+            "size_label": "2",
+            "price": 2450
           }
-        ]
+        ],
+        "length_m": 5
       },
       {
-        "id": "reducing-coupler",
-        "name": "Reducing Coupler",
+        "id": "cpvc-elbow-90",
+        "name": "cPVC Elbow 90°",
         "unit": "pcs",
         "variants": [
           {
-            "size_mm": 20,
-            "price": 20
-          },
-          {
-            "size_mm": 25,
+            "size_mm": 15,
+            "size_label": "1/2",
             "price": 38
           },
           {
-            "size_mm": 32,
-            "price": 78
-          },
-          {
-            "size_mm": 32,
-            "price": 84
-          },
-          {
-            "size_mm": 40,
-            "price": 135
-          },
-          {
-            "size_mm": 40,
-            "price": 134
-          },
-          {
-            "size_mm": 50,
-            "price": 225
-          },
-          {
-            "size_mm": 50,
-            "price": 246
+            "size_mm": 20,
+            "size_label": "3/4",
+            "price": 58
           }
         ]
       },
       {
-        "id": "elbow-90",
-        "name": "Elbow 90°",
+        "id": "cpvc-tee",
+        "name": "cPVC Tee",
         "unit": "pcs",
         "variants": [
           {
             "size_mm": 15,
-            "price": 18
-          },
-          {
-            "size_mm": 20,
-            "price": 22
-          },
-          {
-            "size_mm": 25,
-            "price": 47
-          },
-          {
-            "size_mm": 32,
-            "price": 87
-          },
-          {
-            "size_mm": 40,
-            "price": 165
-          },
-          {
-            "size_mm": 50,
-            "price": 345
-          },
-          {
-            "size_mm": 2,
-            "price": 818
-          },
-          {
-            "size_mm": 3,
-            "price": 1170
-          },
-          {
-            "size_mm": 4,
-            "price": 1860
-          }
-        ]
-      },
-      {
-        "id": "elbow-45",
-        "name": "Elbow 45°",
-        "unit": "pcs",
-        "variants": [
-          {
-            "size_mm": 20,
-            "price": 27
-          },
-          {
-            "size_mm": 25,
-            "price": 45
-          },
-          {
-            "size_mm": 32,
-            "price": 98
-          },
-          {
-            "size_mm": 40,
-            "price": 177
-          },
-          {
-            "size_mm": 50,
-            "price": 405
-          },
-          {
-            "size_mm": 2,
-            "price": 1005
-          },
-          {
-            "size_mm": 3,
-            "price": 1575
-          },
-          {
-            "size_mm": 4,
-            "price": 2775
-          }
-        ]
-      },
-      {
-        "id": "reducing-elbow",
-        "name": "Reducing Elbow",
-        "unit": "pcs",
-        "variants": [
-          {
-            "size_mm": 25,
-            "price": 53
-          },
-          {
-            "size_mm": 20,
-            "price": 27
-          }
-        ]
-      },
-      {
-        "id": "tee",
-        "name": "Tee",
-        "unit": "pcs",
-        "variants": [
-          {
-            "size_mm": 15,
-            "price": 23
-          },
-          {
-            "size_mm": 20,
-            "price": 36
-          },
-          {
-            "size_mm": 25,
-            "price": 59
-          },
-          {
-            "size_mm": 32,
-            "price": 110
-          },
-          {
-            "size_mm": 40,
-            "price": 203
-          },
-          {
-            "size_mm": 50,
-            "price": 431
-          },
-          {
-            "size_mm": 2,
-            "price": 1128
-          },
-          {
-            "size_mm": 3,
-            "price": 1620
-          },
-          {
-            "size_mm": 4,
-            "price": 2925
-          }
-        ]
-      },
-      {
-        "id": "reducing-tee",
-        "name": "Reducing Tee",
-        "unit": "pcs",
-        "variants": [
-          {
-            "size_mm": 20,
-            "price": 54
-          },
-          {
-            "size_mm": 25,
-            "price": 77
-          },
-          {
-            "size_mm": 32,
-            "price": 165
-          },
-          {
-            "size_mm": 32,
-            "price": 146
-          },
-          {
-            "size_mm": 40,
-            "price": 183
-          },
-          {
-            "size_mm": 40,
-            "price": 188
-          },
-          {
-            "size_mm": 50,
-            "price": 390
-          },
-          {
-            "size_mm": 50,
-            "price": 360
-          },
-          {
-            "size_mm": 50,
-            "price": 338
-          }
-        ]
-      },
-      {
-        "id": "union",
-        "name": "Union",
-        "unit": "pcs",
-        "variants": [
-          {
-            "size_mm": 15,
-            "price": 63
-          },
-          {
-            "size_mm": 20,
-            "price": 90
-          },
-          {
-            "size_mm": 25,
-            "price": 128
-          },
-          {
-            "size_mm": 32,
-            "price": 153
-          },
-          {
-            "size_mm": 40,
-            "price": 278
-          },
-          {
-            "size_mm": 50,
-            "price": 480
-          },
-          {
-            "size_mm": 2,
-            "price": 1650
-          },
-          {
-            "size_mm": 3,
-            "price": 2565
-          },
-          {
-            "size_mm": 4,
-            "price": 2938
-          }
-        ]
-      },
-      {
-        "id": "end-cap",
-        "name": "End Cap",
-        "unit": "pcs",
-        "variants": [
-          {
-            "size_mm": 15,
-            "price": 9
-          },
-          {
-            "size_mm": 20,
-            "price": 16
-          },
-          {
-            "size_mm": 25,
-            "price": 25
-          },
-          {
-            "size_mm": 32,
-            "price": 48
-          },
-          {
-            "size_mm": 40,
-            "price": 59
-          },
-          {
-            "size_mm": 50,
-            "price": 128
-          },
-          {
-            "size_mm": 2,
-            "price": 375
-          },
-          {
-            "size_mm": 3,
-            "price": 533
-          },
-          {
-            "size_mm": 4,
-            "price": 938
-          }
-        ]
-      },
-      {
-        "id": "reducing-bush",
-        "name": "Reducing Bush",
-        "unit": "pcs",
-        "variants": [
-          {
-            "size_mm": 20,
-            "price": 17
-          },
-          {
-            "size_mm": 25,
-            "price": 22
-          },
-          {
-            "size_mm": 25,
-            "price": 21
-          },
-          {
-            "size_mm": 32,
-            "price": 41
-          },
-          {
-            "size_mm": 32,
-            "price": 33
-          },
-          {
-            "size_mm": 40,
-            "price": 54
-          },
-          {
-            "size_mm": 40,
-            "price": 53
-          },
-          {
-            "size_mm": 40,
-            "price": 45
-          },
-          {
-            "size_mm": 50,
-            "price": 105
-          },
-          {
-            "size_mm": 50,
-            "price": 113
-          },
-          {
-            "size_mm": 50,
-            "price": 102
-          }
-        ]
-      },
-      {
-        "id": "male-adaptor-plastic-threaded",
-        "name": "Male Adaptor Plastic Threaded",
-        "unit": "pcs",
-        "variants": [
-          {
-            "size_mm": 15,
-            "price": 15
-          },
-          {
-            "size_mm": 20,
-            "price": 27
-          },
-          {
-            "size_mm": 25,
+            "size_label": "1/2",
             "price": 42
           },
           {
-            "size_mm": 32,
-            "price": 63
-          },
-          {
-            "size_mm": 40,
-            "price": 78
-          },
-          {
-            "size_mm": 50,
-            "price": 149
+            "size_mm": 20,
+            "size_label": "3/4",
+            "price": 62
           }
         ]
       },
       {
-        "id": "ball-valve",
-        "name": "Ball Valve",
+        "id": "cpvc-mta-brass",
+        "name": "cPVC MTA Brass",
         "unit": "pcs",
         "variants": [
           {
             "size_mm": 15,
-            "price": 150
+            "size_label": "1/2",
+            "price": 165
+          }
+        ]
+      },
+      {
+        "id": "cpvc-fta-brass",
+        "name": "cPVC FTA Brass",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 15,
+            "size_label": "1/2",
+            "price": 175
+          }
+        ]
+      },
+      {
+        "id": "cpvc-union",
+        "name": "cPVC Union",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 25,
+            "size_label": "1",
+            "price": 220
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "system": "UPVC PLUMBING",
+    "category": "uPVC Plumbing",
+    "products": [
+      {
+        "id": "upvc-pipe-class-2-3-mtr",
+        "name": "uPVC Pipe Class 2 (3 Mtr)",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 15,
+            "size_label": "1/2",
+            "price": 140
           },
           {
             "size_mm": 20,
-            "price": 233
+            "size_label": "3/4",
+            "price": 190
           },
           {
             "size_mm": 25,
-            "price": 368
+            "size_label": "1",
+            "price": 260
+          }
+        ],
+        "length_m": 3
+      },
+      {
+        "id": "upvc-elbow-90",
+        "name": "uPVC Elbow 90°",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 25,
+            "size_label": "1",
+            "price": 28
+          }
+        ]
+      },
+      {
+        "id": "upvc-tee",
+        "name": "uPVC Tee",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 25,
+            "size_label": "1",
+            "price": 42
+          }
+        ]
+      },
+      {
+        "id": "upvc-socket",
+        "name": "uPVC Socket",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 25,
+            "size_label": "1",
+            "price": 22
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "system": "SWR DRAINAGE",
+    "category": "SWR Drainage",
+    "products": [
+      {
+        "id": "swr-pipe-type-b-3-mtr",
+        "name": "SWR Pipe Type B (3 Mtr)",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 50,
+            "size_label": "2",
+            "price": 360
           },
           {
-            "size_mm": 32,
-            "price": 645
+            "size_mm": 80,
+            "size_label": "3",
+            "price": 540
           },
+          {
+            "size_mm": 110,
+            "size_label": "4",
+            "price": 780
+          },
+          {
+            "size_mm": 160,
+            "size_label": "6",
+            "price": 1580
+          }
+        ],
+        "length_m": 3
+      },
+      {
+        "id": "swr-bend-87-5",
+        "name": "SWR Bend 87.5°",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 110,
+            "size_label": "4",
+            "price": 145
+          }
+        ]
+      },
+      {
+        "id": "swr-tee",
+        "name": "SWR Tee",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 110,
+            "size_label": "4",
+            "price": 185
+          }
+        ]
+      },
+      {
+        "id": "swr-door-bend",
+        "name": "SWR Door Bend",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 110,
+            "size_label": "4",
+            "price": 210
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "system": "AGRICULTURE UPVC",
+    "category": "Agriculture uPVC",
+    "products": [
+      {
+        "id": "upvc-pressure-pipe-class-4-6-mtr",
+        "name": "uPVC Pressure Pipe Class 4 (6 Mtr)",
+        "unit": "pcs",
+        "variants": [
           {
             "size_mm": 40,
-            "price": 1020
+            "size_label": "1-1/2",
+            "price": 380
           },
           {
             "size_mm": 50,
-            "price": 1770
+            "size_label": "2",
+            "price": 520
           },
           {
-            "size_mm": 2,
-            "price": 7425
+            "size_mm": 80,
+            "size_label": "3",
+            "price": 980
           },
           {
-            "size_mm": 3,
-            "price": 10275
+            "size_mm": 110,
+            "size_label": "4",
+            "price": 1580
+          }
+        ],
+        "length_m": 6
+      }
+    ]
+  },
+  {
+    "system": "AGRICULTURE HDPE",
+    "category": "Agriculture HDPE",
+    "products": [
+      {
+        "id": "hdpe-pipe-pe63-pn4-6-mtr",
+        "name": "HDPE Pipe PE63 PN4 (6 Mtr)",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 50,
+            "size_label": "2",
+            "price": 540
+          }
+        ],
+        "length_m": 6
+      },
+      {
+        "id": "hdpe-pipe-pe80-pn6-6-mtr",
+        "name": "HDPE Pipe PE80 PN6 (6 Mtr)",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 80,
+            "size_label": "3",
+            "price": 920
+          }
+        ],
+        "length_m": 6
+      },
+      {
+        "id": "hdpe-pipe-pe100-pn6-6-mtr",
+        "name": "HDPE Pipe PE100 PN6 (6 Mtr)",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 110,
+            "size_label": "4",
+            "price": 1680
+          }
+        ],
+        "length_m": 6
+      },
+      {
+        "id": "hdpe-pipe-pe100-pn10-6-mtr",
+        "name": "HDPE Pipe PE100 PN10 (6 Mtr)",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 160,
+            "size_label": "6",
+            "price": 3250
+          }
+        ],
+        "length_m": 6
+      }
+    ]
+  },
+  {
+    "system": "BOREWELL SYSTEMS",
+    "category": "Borewell Systems",
+    "products": [
+      {
+        "id": "upvc-casing-pipe-3-mtr",
+        "name": "uPVC Casing Pipe (3 Mtr)",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 110,
+            "size_label": "4",
+            "price": 1450
           },
           {
-            "size_mm": 4,
-            "price": 16875
+            "size_mm": 160,
+            "size_label": "6",
+            "price": 2450
+          }
+        ],
+        "length_m": 3
+      },
+      {
+        "id": "upvc-column-pipe-medium",
+        "name": "uPVC Column Pipe Medium",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 50,
+            "size_label": "2",
+            "price": 780
+          },
+          {
+            "size_mm": 80,
+            "size_label": "3",
+            "price": 1180
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "system": "WATER STORAGE",
+    "category": "Water Storage",
+    "products": [
+      {
+        "id": "triple-layer-water-tank",
+        "name": "Triple Layer Water Tank",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 0,
+            "size_label": "500 L",
+            "price": 4200
+          },
+          {
+            "size_mm": 0,
+            "size_label": "750 L",
+            "price": 5600
+          },
+          {
+            "size_mm": 0,
+            "size_label": "1000 L",
+            "price": 7200
+          },
+          {
+            "size_mm": 0,
+            "size_label": "1500 L",
+            "price": 10500
+          },
+          {
+            "size_mm": 0,
+            "size_label": "2000 L",
+            "price": 13500
+          },
+          {
+            "size_mm": 0,
+            "size_label": "3000 L",
+            "price": 19800
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "system": "HOME SOLUTIONS",
+    "category": "Home Solutions",
+    "products": [
+      {
+        "id": "ptmt-bib-cock",
+        "name": "PTMT Bib Cock",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 15,
+            "size_label": "1/2",
+            "price": 520
+          }
+        ]
+      },
+      {
+        "id": "ptmt-pillar-cock",
+        "name": "PTMT Pillar Cock",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 15,
+            "size_label": "1/2",
+            "price": 680
+          }
+        ]
+      },
+      {
+        "id": "ptmt-angle-valve",
+        "name": "PTMT Angle Valve",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 15,
+            "size_label": "1/2",
+            "price": 460
+          }
+        ]
+      },
+      {
+        "id": "ptmt-shower",
+        "name": "PTMT Shower",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 0,
+            "size_label": "Standard",
+            "price": 780
+          }
+        ]
+      },
+      {
+        "id": "ptmt-health-faucet",
+        "name": "PTMT Health Faucet",
+        "unit": "pcs",
+        "variants": [
+          {
+            "size_mm": 0,
+            "size_label": "Standard",
+            "price": 620
           }
         ]
       }

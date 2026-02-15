@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { fetchInvoices, updateInvoicePayment } from "../services/api";
 import PageWrapper from "../components/PageWrapper";
 
@@ -22,32 +22,7 @@ export default function Invoices() {
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
-  useEffect(() => {
-    loadInvoices();
-  }, []);
-
-  const loadInvoices = async () => {
-    try {
-      setLoading(true);
-      const res = await fetchInvoices();
-      // Handle both old format (array) and new format (object with invoices array)
-      const data = Array.isArray(res.data) ? res.data : res.data.invoices || [];
-      setInvoices(data);
-      applyFiltersAndSort(data, searchTerm, filterStatus, sortOrder);
-      setError("");
-    } catch (err) {
-      console.error("Fetch invoices error:", err);
-      setError("Failed to load invoices");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    applyFiltersAndSort(invoices, searchTerm, filterStatus, sortOrder);
-  }, [searchTerm, filterStatus, sortOrder, invoices]);
-
-  const applyFiltersAndSort = (data, search, status, sort) => {
+  const applyFiltersAndSort = useCallback((data, search, status, sort) => {
     let result = [...data];
 
     // Search filter
@@ -71,7 +46,32 @@ export default function Invoices() {
     }
 
     setFilteredInvoices(result);
-  };
+  }, []);
+
+  const loadInvoices = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetchInvoices();
+      // Handle both old format (array) and new format (object with invoices array)
+      const data = Array.isArray(res.data) ? res.data : res.data.invoices || [];
+      setInvoices(data);
+      applyFiltersAndSort(data, searchTerm, filterStatus, sortOrder);
+      setError("");
+    } catch (err) {
+      console.error("Fetch invoices error:", err);
+      setError("Failed to load invoices");
+    } finally {
+      setLoading(false);
+    }
+  }, [applyFiltersAndSort, filterStatus, searchTerm, sortOrder]);
+
+  useEffect(() => {
+    loadInvoices();
+  }, [loadInvoices]);
+
+  useEffect(() => {
+    applyFiltersAndSort(invoices, searchTerm, filterStatus, sortOrder);
+  }, [searchTerm, filterStatus, sortOrder, invoices, applyFiltersAndSort]);
 
   const getWhatsAppLink = (inv) => {
     const date = new Date(inv.createdAt).toLocaleDateString('en-IN');

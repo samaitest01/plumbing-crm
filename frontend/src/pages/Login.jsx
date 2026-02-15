@@ -1,6 +1,6 @@
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext";
+import { AuthContext } from "../context/AuthContextStore";
 import PageWrapper from "../components/PageWrapper";
 
 export default function Login() {
@@ -44,6 +44,7 @@ export default function Login() {
         setError(result.message);
       }
     } catch (err) {
+      console.error("Auth error:", err);
       setError("An unexpected error occurred");
     } finally {
       setLoading(false);

@@ -29,7 +29,14 @@ router.get("/:mobile", async (req, res) => {
     const totalInvoices = invoices.length;
     const totalBilled = invoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
     const totalPaid = invoices.reduce((sum, inv) => sum + (inv.amountRecorded || 0), 0);
-    const totalBalance = invoices.reduce((sum, inv) => sum + (inv.balanceAmount || 0), 0);
+    const totalBalance = invoices.reduce((sum, inv) => {
+      if (typeof inv.balanceAmount === "number") {
+        return sum + inv.balanceAmount;
+      }
+      const total = inv.total || 0;
+      const recorded = inv.amountRecorded || 0;
+      return sum + Math.max(total - recorded, 0);
+    }, 0);
 
     res.json({
       customer,

@@ -1,24 +1,19 @@
-import { createContext, useState, useEffect } from "react";
+import { useState } from "react";
 import { login as apiLogin, register as apiRegister } from "../services/api";
-
-export const AuthContext = createContext(null);
+import { AuthContext } from "./AuthContextStore";
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Load user and token from localStorage on mount
+  const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem("user");
-    const storedToken = localStorage.getItem("token");
-    
-    if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
-      setToken(storedToken);
+    if (!storedUser) return null;
+    try {
+      return JSON.parse(storedUser);
+    } catch {
+      return null;
     }
-    setLoading(false);
-  }, []);
+  });
+  const [token, setToken] = useState(() => localStorage.getItem("token"));
+  const loading = false;
 
   const login = async (email, password) => {
     try {

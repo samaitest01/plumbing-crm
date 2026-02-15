@@ -1,12 +1,9 @@
 import { useEffect, useState } from "react";
 import PageWrapper from "../components/PageWrapper";
 import { fetchAllProducts, saveInvoice, fetchCustomers, createCustomer } from "../services/api";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
 
 
 export default function CreateInvoice() {
-  const navigate = useNavigate();
   const shop = {
     name: "National Traders",
     address: "Behind High School Ground, Pathri - 431506",
@@ -23,6 +20,7 @@ export default function CreateInvoice() {
   const [customerMobile, setCustomerMobile] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState("");
 
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [productId, setProductId] = useState("");
   const [productName, setProductName] = useState("");
   const [productSearch, setProductSearch] = useState("");
@@ -40,41 +38,57 @@ export default function CreateInvoice() {
   const [paymentMode, setPaymentMode] = useState("");
   const [amountRecorded, setAmountRecorded] = useState(0);
 
+  const resetInvoiceItems = () => {
+    setItems([]);
+    setEditId(null);
+    setSelectedCategory("");
+    setProductId("");
+    setProductName("");
+    setProductSearch("");
+    setVariants([]);
+    setSizeMM("");
+    setQty("");
+    setLineDiscount("");
+    setInvoiceId(null);
+    setInvoiceDate(null);
+    setPaymentStatus("Pending");
+    setPaymentMode("");
+    setAmountRecorded(0);
+  };
+
   useEffect(() => {
     fetchAllProducts().then(r => setSystems(r.data || []));
     fetchCustomers().then(r => setCustomers(r.data || []));
   }, []);
 
-  const handleProductChange = e => {
-    const id = e.target.value;
-    setProductId(id);
 
-    const all = systems.flatMap(s => s.products || []);
-    const p = all.find(x => x.id === id);
-
-    if (p) {
-      setProductName(p.name);
-      setVariants(p.variants);
-      setProductSearch(p.name);
-    } else {
-      setVariants([]);
-    }
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+    setProductId("");
+    setProductName("");
+    setProductSearch("");
+    setVariants([]);
+    setSizeMM("");
   };
 
-  const handleProductInputChange = (value) => {
-    setProductSearch(value);
+  const handleProductSelect = (productIdValue) => {
+    setProductId(productIdValue);
 
-    const all = systems.flatMap(s => s.products || []);
-    const p = all.find(x => x.name.toLowerCase() === value.toLowerCase());
+    const all = selectedCategory
+      ? systems.find(s => s.system === selectedCategory)?.products || []
+      : systems.flatMap(s => s.products || []);
+    const p = all.find(x => x.id === productIdValue);
 
     if (p) {
-      setProductId(p.id);
       setProductName(p.name);
+      setProductSearch(p.name);
       setVariants(p.variants);
+      setSizeMM("");
     } else {
-      setProductId("");
       setProductName("");
+      setProductSearch("");
       setVariants([]);
+      setSizeMM("");
     }
   };
 
@@ -112,6 +126,7 @@ export default function CreateInvoice() {
     );
 
     setEditId(null);
+    setSelectedCategory("");
     setProductId("");
     setProductName("");
     setProductSearch("");
@@ -132,7 +147,14 @@ export default function CreateInvoice() {
 
     const all = systems.flatMap(s => s.products || []);
     const p = all.find(x => x.id === i.productId);
-    if (p) setVariants(p.variants);
+    if (p) {
+      setVariants(p.variants);
+      // Find and set the category
+      const system = systems.find(s => s.products.some(prod => prod.id === i.productId));
+      if (system) {
+        setSelectedCategory(system.system);
+      }
+    }
   };
 
 
@@ -154,7 +176,9 @@ export default function CreateInvoice() {
     setItems(items.filter(i => i.id !== id));
   };
 
-  const allProducts = systems.flatMap(s => s.products || []);
+  const allProducts = selectedCategory
+    ? systems.find(s => s.system === selectedCategory)?.products || []
+    : systems.flatMap(s => s.products || []);
   const filteredProducts = productSearch
     ? allProducts.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()))
     : allProducts;
@@ -207,30 +231,21 @@ export default function CreateInvoice() {
       setInvoiceDate(res.data.createdAt);
       alert("Invoice saved successfully");
       console.log("✅ Invoice saved:", res.data);
+      resetInvoiceItems();
     } catch (err) {
       console.error("❌ Error saving invoice:", err.response?.data || err.message);
       alert(err.response?.data?.error || "Failed to save invoice");
     }
   };
-    const handleSaveInvoice = async () => {
-    try {
-      await axios.post("http://localhost:5000/api/invoices", {
-        customerName,
-        customerMobile,
-        items: addedProducts,
-        subTotal,
-        total,
-      });
 
-      alert("Invoice saved");
-      navigate("/invoices");
-    } catch (err) {
-      console.error(err);
-      alert("Save failed");
-    }
+  const handlePrint = () => {
+    const previousHandler = window.onafterprint;
+    window.onafterprint = () => {
+      resetInvoiceItems();
+      window.onafterprint = previousHandler;
+    };
+    window.print();
   };
-
-
   return (
     <PageWrapper>
 
@@ -313,20 +328,37 @@ export default function CreateInvoice() {
       {/* PRODUCT FORM */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem", marginBottom: "1rem", alignItems: "flex-end" }}>
         <div>
-          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Product</label>
-          <input
-            placeholder="Search or select product"
-            value={productSearch}
-            onChange={e => handleProductInputChange(e.target.value)}
-            className="form-input"
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Category</label>
+          <select
+            value={selectedCategory}
+            onChange={e => handleCategoryChange(e.target.value)}
+            className="form-select"
             style={{ width: "100%" }}
-            list="product-options"
-          />
-          <datalist id="product-options">
-            {filteredProducts.map(p => (
-              <option key={p.id} value={p.name} />
+          >
+            <option value="">All Categories</option>
+            {systems.map((system, idx) => (
+              <option key={`${system.system}-${idx}`} value={system.system}>
+                {system.category}
+              </option>
             ))}
-          </datalist>
+          </select>
+        </div>
+
+        <div>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Product</label>
+          <select
+            value={productId}
+            onChange={e => handleProductSelect(e.target.value)}
+            className="form-select"
+            style={{ width: "100%" }}
+          >
+            <option value="">-- Select Product --</option>
+            {filteredProducts.map(p => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
@@ -514,7 +546,7 @@ export default function CreateInvoice() {
             <button>PDF</button>
           </a>
         )}
-        <button onClick={() => window.print()}>Print</button>
+        <button onClick={handlePrint}>Print</button>
       </div>
 
     </PageWrapper>
