@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContextStore";
+import logo from "../assets/national-traders-logo.svg";
 
 export default function Navbar() {
   const { user, logout } = useContext(AuthContext);
@@ -16,6 +17,10 @@ export default function Navbar() {
     }}>
       {/* Left Navigation */}
       <div style={{ display: "flex", gap: "2rem", alignItems: "center" }}>
+        <Link to="/" style={{ display: "flex", alignItems: "center", gap: "0.5rem", textDecoration: "none" }}>
+          <img src={logo} alt="National Traders" style={{ width: "34px", height: "34px", borderRadius: "50%", backgroundColor: "#fff" }} />
+          <span style={{ color: "#fff", fontSize: "15px", fontWeight: "700", letterSpacing: "0.4px" }}>National Traders</span>
+        </Link>
         <Link style={{ color: "#fff", fontSize: "16px", fontWeight: "600", textDecoration: "none", transition: "color 0.3s" }} to="/">
           🏠 Dashboard
         </Link>

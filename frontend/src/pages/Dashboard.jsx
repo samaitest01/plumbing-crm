@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { fetchInvoices, fetchCustomers } from "../services/api";
+import { fetchInvoices, fetchCustomers, fetchAllProducts } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import PageWrapper from "../components/PageWrapper";
+
+const getVariantKey = (productId, sizeMM) => `${productId}__${Number(sizeMM).toFixed(2)}`;
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -9,9 +11,11 @@ export default function Dashboard() {
     todaySales: 0,
     todayInvoices: 0,
     totalCustomers: 0,
-    pendingBalance: 0
+    pendingBalance: 0,
+    lowStockItems: 0
   });
   const [recentInvoices, setRecentInvoices] = useState([]);
+  const [lowStockList, setLowStockList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -22,14 +26,16 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [invoicesRes, customersRes] = await Promise.all([
+      const [invoicesRes, customersRes, productsRes] = await Promise.all([
         fetchInvoices(),
-        fetchCustomers()
+        fetchCustomers(),
+        fetchAllProducts()
       ]);
 
       // Handle both old format (array) and new format (object with invoices array)
       const invoices = Array.isArray(invoicesRes.data) ? invoicesRes.data : invoicesRes.data.invoices || [];
       const customers = customersRes.data || [];
+      const allProducts = productsRes.data || [];
 
       // Calculate today's sales and invoices
       const today = new Date();
@@ -48,6 +54,38 @@ export default function Dashboard() {
         .filter(inv => inv.paymentStatus === "Pending")
         .reduce((sum, inv) => sum + (inv.total - (inv.amountRecorded || 0)), 0);
 
+      const soldMap = {};
+      invoices.forEach((invoice) => {
+        (invoice.items || []).forEach((item) => {
+          const key = getVariantKey(item.productId, item.sizeMM);
+          soldMap[key] = (soldMap[key] || 0) + (Number(item.qty) || 0);
+        });
+      });
+
+      const lowStock = [];
+
+      allProducts.forEach((system) => {
+        (system.products || []).forEach((product) => {
+          (product.variants || []).forEach((variant) => {
+            const soldQty = soldMap[getVariantKey(product.id, variant.size_mm)] || 0;
+            const stockQty = Number(variant.stock_qty) || 0;
+            const reorderLevel = Number(variant.reorder_level) || 0;
+            const availableQty = stockQty - soldQty;
+            if (availableQty <= reorderLevel) {
+              lowStock.push({
+                key: `${product.id}-${variant.size_mm}`,
+                productName: product.name,
+                sizeLabel: variant.size_label || `${variant.size_mm} mm`,
+                stockQty,
+                soldQty,
+                availableQty,
+                reorderLevel
+              });
+            }
+          });
+        });
+      });
+
       // Get recent invoices (last 5)
       const recent = invoices.slice(0, 5);
 
@@ -55,10 +93,12 @@ export default function Dashboard() {
         todaySales: todaySales.toFixed(2),
         todayInvoices: todayInvoices.length,
         totalCustomers: customers.length,
-        pendingBalance: pendingBalance.toFixed(2)
+        pendingBalance: pendingBalance.toFixed(2),
+        lowStockItems: lowStock.length
       });
 
       setRecentInvoices(recent);
+      setLowStockList(lowStock.slice(0, 8));
       setError("");
     } catch (err) {
       console.error("Failed to fetch dashboard data", err);
@@ -120,6 +160,7 @@ export default function Dashboard() {
         <StatCard title="Today's Invoices" value={stats.todayInvoices} icon="📄" />
         <StatCard title="Total Customers" value={stats.totalCustomers} icon="👥" />
         <StatCard title="Pending Records" value={`₹${stats.pendingBalance}`} icon="⏳" />
+        <StatCard title="Low Stock Alerts" value={stats.lowStockItems} icon="📦" />
       </div>
 
       <hr style={{ margin: "2rem 0" }} />
@@ -141,6 +182,44 @@ export default function Dashboard() {
             📦 Products
           </button>
         </div>
+      </div>
+
+      <hr style={{ margin: "2rem 0" }} />
+
+      <div style={{ marginBottom: "2rem" }}>
+        <h2 style={{ marginBottom: "1rem", fontSize: "18px", fontWeight: "600" }}>Inventory Alerts</h2>
+        {lowStockList.length === 0 ? (
+          <div style={{ backgroundColor: "#f5f5f5", padding: "1rem", borderRadius: "8px", color: "#666" }}>
+            All tracked variants are above reorder level.
+          </div>
+        ) : (
+          <div className="table-responsive">
+            <table style={{ borderCollapse: "collapse", width: "100%" }}>
+              <thead>
+                <tr>
+                  <th style={{ border: "1px solid #333", padding: "8px", textAlign: "left" }}>Product</th>
+                  <th style={{ border: "1px solid #333", padding: "8px", textAlign: "center" }}>Size</th>
+                  <th style={{ border: "1px solid #333", padding: "8px", textAlign: "right" }}>Stock</th>
+                  <th style={{ border: "1px solid #333", padding: "8px", textAlign: "right" }}>Sold</th>
+                  <th style={{ border: "1px solid #333", padding: "8px", textAlign: "right" }}>Available</th>
+                  <th style={{ border: "1px solid #333", padding: "8px", textAlign: "right" }}>Reorder At</th>
+                </tr>
+              </thead>
+              <tbody>
+                {lowStockList.map((item) => (
+                  <tr key={item.key} style={{ backgroundColor: "#fff7e6" }}>
+                    <td style={{ border: "1px solid #ddd", padding: "8px" }}>{item.productName}</td>
+                    <td style={{ border: "1px solid #ddd", padding: "8px", textAlign: "center" }}>{item.sizeLabel}</td>
+                    <td style={{ border: "1px solid #ddd", padding: "8px", textAlign: "right" }}>{item.stockQty}</td>
+                    <td style={{ border: "1px solid #ddd", padding: "8px", textAlign: "right" }}>{item.soldQty}</td>
+                    <td style={{ border: "1px solid #ddd", padding: "8px", textAlign: "right", fontWeight: "700", color: "#b45309" }}>{item.availableQty}</td>
+                    <td style={{ border: "1px solid #ddd", padding: "8px", textAlign: "right" }}>{item.reorderLevel}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <hr style={{ margin: "2rem 0" }} />
@@ -174,7 +253,22 @@ export default function Dashboard() {
                 {recentInvoices.map(inv => (
                   <tr key={inv._id}>
                     <td style={{ border: "1px solid #ccc", padding: "10px" }}>
-                      <span style={{ fontWeight: "600", color: "#2563eb" }}>{inv.invoiceNumber}</span>
+                      <button
+                        onClick={() => navigate(`/invoices?invoiceId=${inv._id}`)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          padding: 0,
+                          margin: 0,
+                          fontWeight: "600",
+                          color: "#2563eb",
+                          cursor: "pointer",
+                          textDecoration: "underline"
+                        }}
+                        title="Open invoice details"
+                      >
+                        {inv.invoiceNumber}
+                      </button>
                     </td>
                     <td style={{ border: "1px solid #ccc", padding: "10px" }}>{inv.customerName}</td>
                     <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center", fontSize: "13px" }}>
@@ -193,7 +287,7 @@ export default function Dashboard() {
                         color: inv.paymentStatus === "Recorded" ? "#155724" : "#856404",
                         display: "inline-block"
                       }}>
-                        {inv.paymentStatus || "Pending"}
+                        {inv.paymentStatus === "Recorded" ? "Paid" : "Partial"}
                       </span>
                     </td>
                   </tr>

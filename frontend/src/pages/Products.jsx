@@ -1,6 +1,34 @@
 import { useCallback, useEffect, useState } from "react";
 import PageWrapper from "../components/PageWrapper";
-import { fetchAllProducts, createProduct, updateProduct, deleteProduct } from "../services/api";
+import { fetchAllProducts, createProduct, updateProduct, deleteProduct, fetchInvoices } from "../services/api";
+
+const MM_PER_INCH = 25.4;
+const roundTo = (value, decimals) => Number(value.toFixed(decimals));
+
+const getVariantSizeInch = (variant) => {
+  const explicitInch = Number(variant?.size_inch);
+  if (Number.isFinite(explicitInch) && explicitInch > 0) return explicitInch;
+
+  const sizeMM = Number(variant?.size_mm);
+  if (Number.isFinite(sizeMM) && sizeMM > 0) {
+    return roundTo(sizeMM / MM_PER_INCH, 3);
+  }
+
+  return null;
+};
+
+const getVariantKey = (productId, sizeMM) => `${productId}__${Number(sizeMM).toFixed(2)}`;
+
+const buildSoldMap = (invoices) => {
+  const sold = {};
+  invoices.forEach((invoice) => {
+    (invoice.items || []).forEach((item) => {
+      const key = getVariantKey(item.productId, item.sizeMM);
+      sold[key] = (sold[key] || 0) + (Number(item.qty) || 0);
+    });
+  });
+  return sold;
+};
 
 export default function Products() {
   const [systems, setSystems] = useState([]);
@@ -8,6 +36,7 @@ export default function Products() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
   const [editing, setEditing] = useState(null);
+  const [soldMap, setSoldMap] = useState({});
   const [form, setForm] = useState({
     system: "",
     newSystem: "",
@@ -16,15 +45,23 @@ export default function Products() {
     unit: "pcs",
     length_m: "",
     size_mm: "",
+    size_inch: "",
     size_label: "",
-    price: ""
+    price: "",
+    stock_qty: "",
+    reorder_level: ""
   });
   const [variants, setVariants] = useState([]);
 
   const loadProducts = useCallback(async () => {
     try {
-      const res = await fetchAllProducts();
-      setSystems(res.data || []);
+      const [productsRes, invoicesRes] = await Promise.all([
+        fetchAllProducts(),
+        fetchInvoices()
+      ]);
+      setSystems(productsRes.data || []);
+      const invoices = Array.isArray(invoicesRes.data) ? invoicesRes.data : invoicesRes.data.invoices || [];
+      setSoldMap(buildSoldMap(invoices));
     } catch (err) {
       console.error("Failed to fetch products", err);
     } finally {
@@ -41,28 +78,91 @@ export default function Products() {
     setForm(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleAddVariant = () => {
-    const size = Number(form.size_mm);
-    const price = Number(form.price);
-    if (!Number.isFinite(size) || !Number.isFinite(price)) {
-      setFormError("Enter a valid size and price for the variant");
+  const handleSizeMMChange = (value) => {
+    setFormError("");
+    if (value === "") {
+      setForm(prev => ({ ...prev, size_mm: "", size_inch: "" }));
       return;
     }
+
+    const numericMM = Number(value);
+    if (!Number.isFinite(numericMM) || numericMM <= 0) {
+      setForm(prev => ({ ...prev, size_mm: value, size_inch: "" }));
+      return;
+    }
+
+    setForm(prev => ({
+      ...prev,
+      size_mm: value,
+      size_inch: String(roundTo(numericMM / MM_PER_INCH, 3))
+    }));
+  };
+
+  const handleSizeInchChange = (value) => {
+    setFormError("");
+    if (value === "") {
+      setForm(prev => ({ ...prev, size_inch: "", size_mm: "" }));
+      return;
+    }
+
+    const numericInch = Number(value);
+    if (!Number.isFinite(numericInch) || numericInch <= 0) {
+      setForm(prev => ({ ...prev, size_inch: value, size_mm: "" }));
+      return;
+    }
+
+    setForm(prev => ({
+      ...prev,
+      size_inch: value,
+      size_mm: String(roundTo(numericInch * MM_PER_INCH, 2))
+    }));
+  };
+
+  const handleAddVariant = () => {
+    const sizeMMInput = Number(form.size_mm);
+    const sizeInchInput = Number(form.size_inch);
+    const price = Number(form.price);
+
+    const hasSizeMM = Number.isFinite(sizeMMInput) && sizeMMInput > 0;
+    const hasSizeInch = Number.isFinite(sizeInchInput) && sizeInchInput > 0;
+
+    if ((!hasSizeMM && !hasSizeInch) || !Number.isFinite(price)) {
+      setFormError("Enter a valid size (mm or inch) and price for the variant");
+      return;
+    }
+
+    const sizeMM = hasSizeMM ? sizeMMInput : roundTo(sizeInchInput * MM_PER_INCH, 2);
+    const sizeInch = hasSizeInch ? sizeInchInput : roundTo(sizeMM / MM_PER_INCH, 3);
+    const stockQty = Number(form.stock_qty);
+    const reorderLevel = Number(form.reorder_level);
+
+    if ((form.stock_qty !== "" && (!Number.isFinite(stockQty) || stockQty < 0)) || (form.reorder_level !== "" && (!Number.isFinite(reorderLevel) || reorderLevel < 0))) {
+      setFormError("Stock quantity and reorder level must be 0 or greater");
+      return;
+    }
+
+    const computedLabel = `${roundTo(sizeInch, 3)}" (${roundTo(sizeMM, 2)} mm)`;
 
     setVariants(prev => ([
       ...prev,
       {
-        size_mm: size,
+        size_mm: sizeMM,
+        size_inch: sizeInch,
         price,
-        size_label: form.size_label ? form.size_label.trim() : undefined
+        stock_qty: Number.isFinite(stockQty) && stockQty >= 0 ? stockQty : 0,
+        reorder_level: Number.isFinite(reorderLevel) && reorderLevel >= 0 ? reorderLevel : 0,
+        size_label: form.size_label ? form.size_label.trim() : computedLabel
       }
     ]));
 
     setForm(prev => ({
       ...prev,
       size_mm: "",
+      size_inch: "",
       size_label: "",
-      price: ""
+      price: "",
+      stock_qty: "",
+      reorder_level: ""
     }));
   };
 
@@ -79,8 +179,11 @@ export default function Products() {
       unit: "pcs",
       length_m: "",
       size_mm: "",
+      size_inch: "",
       size_label: "",
-      price: ""
+      price: "",
+      stock_qty: "",
+      reorder_level: ""
     });
     setVariants([]);
     setEditing(null);
@@ -95,10 +198,16 @@ export default function Products() {
       unit: product.unit || "pcs",
       length_m: product.length_m ? String(product.length_m) : "",
       size_mm: "",
+      size_inch: "",
       size_label: "",
-      price: ""
+      price: "",
+      stock_qty: "",
+      reorder_level: ""
     });
-    setVariants(product.variants || []);
+    setVariants((product.variants || []).map((variant) => ({
+      ...variant,
+      size_inch: getVariantSizeInch(variant)
+    })));
     setEditing({ system, productId: product.id });
     setFormError("");
   };
@@ -283,9 +392,19 @@ export default function Products() {
               <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Size (mm)</label>
               <input
                 value={form.size_mm}
-                onChange={(e) => handleFormChange("size_mm", e.target.value)}
+                onChange={(e) => handleSizeMMChange(e.target.value)}
                 className="form-input"
                 placeholder="e.g. 20"
+                style={{ width: "100%" }}
+              />
+            </div>
+            <div>
+              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Size (inch)</label>
+              <input
+                value={form.size_inch}
+                onChange={(e) => handleSizeInchChange(e.target.value)}
+                className="form-input"
+                placeholder="e.g. 0.5"
                 style={{ width: "100%" }}
               />
             </div>
@@ -309,6 +428,26 @@ export default function Products() {
                 style={{ width: "100%" }}
               />
             </div>
+            <div>
+              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Stock Qty</label>
+              <input
+                value={form.stock_qty}
+                onChange={(e) => handleFormChange("stock_qty", e.target.value)}
+                className="form-input"
+                placeholder="e.g. 100"
+                style={{ width: "100%" }}
+              />
+            </div>
+            <div>
+              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Reorder Level</label>
+              <input
+                value={form.reorder_level}
+                onChange={(e) => handleFormChange("reorder_level", e.target.value)}
+                className="form-input"
+                placeholder="e.g. 20"
+                style={{ width: "100%" }}
+              />
+            </div>
             <button onClick={handleAddVariant} style={{ height: "36px" }}>
               Add Variant
             </button>
@@ -320,8 +459,11 @@ export default function Products() {
                 <thead>
                   <tr>
                     <th>Size (mm)</th>
+                    <th>Size (inch)</th>
                     <th>Label</th>
                     <th>Price (Rs.)</th>
+                    <th>Stock</th>
+                    <th>Reorder</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -329,8 +471,11 @@ export default function Products() {
                   {variants.map((variant, idx) => (
                     <tr key={`${variant.size_mm}-${idx}`}>
                       <td>{variant.size_mm}</td>
+                      <td>{getVariantSizeInch(variant) ?? "-"}</td>
                       <td>{variant.size_label || "-"}</td>
                       <td>{variant.price}</td>
+                      <td>{variant.stock_qty ?? 0}</td>
+                      <td>{variant.reorder_level ?? 0}</td>
                       <td>
                         <button onClick={() => handleRemoveVariant(idx)} style={{ padding: "4px 8px" }}>
                           Remove
@@ -440,7 +585,7 @@ export default function Products() {
                             borderBottom: "2px solid #333",
                             backgroundColor: "#f0f0f0",
                             fontWeight: "600"
-                          }}>Size (mm)</th>
+                          }}>Size (mm / inch)</th>
                           <th style={{ 
                             padding: "10px", 
                             textAlign: "right", 
@@ -448,17 +593,71 @@ export default function Products() {
                             backgroundColor: "#f0f0f0",
                             fontWeight: "600"
                           }}>Price (₹)</th>
+                          <th style={{ 
+                            padding: "10px", 
+                            textAlign: "right", 
+                            borderBottom: "2px solid #333",
+                            backgroundColor: "#f0f0f0",
+                            fontWeight: "600"
+                          }}>Stock</th>
+                          <th style={{ 
+                            padding: "10px", 
+                            textAlign: "right", 
+                            borderBottom: "2px solid #333",
+                            backgroundColor: "#f0f0f0",
+                            fontWeight: "600"
+                          }}>Sold</th>
+                          <th style={{ 
+                            padding: "10px", 
+                            textAlign: "right", 
+                            borderBottom: "2px solid #333",
+                            backgroundColor: "#f0f0f0",
+                            fontWeight: "600"
+                          }}>Available</th>
+                          <th style={{ 
+                            padding: "10px", 
+                            textAlign: "center", 
+                            borderBottom: "2px solid #333",
+                            backgroundColor: "#f0f0f0",
+                            fontWeight: "600"
+                          }}>Status</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {product.variants.map((variant, vIdx) => (
-                          <tr key={vIdx} style={{ borderBottom: "1px solid #ddd" }}>
-                            <td style={{ padding: "10px" }}>{variant.size_label || variant.size_mm}</td>
+                        {product.variants.map((variant, vIdx) => {
+                          const soldQty = soldMap[getVariantKey(product.id, variant.size_mm)] || 0;
+                          const stockQty = Number(variant.stock_qty) || 0;
+                          const availableQty = stockQty - soldQty;
+                          const reorderLevel = Number(variant.reorder_level) || 0;
+                          const isLowStock = availableQty <= reorderLevel;
+
+                          return (
+                          <tr key={vIdx} style={{ borderBottom: "1px solid #ddd", backgroundColor: isLowStock ? "#fff7e6" : "transparent" }}>
+                            <td style={{ padding: "10px" }}>
+                              {variant.size_label || `${variant.size_mm} mm / ${getVariantSizeInch(variant)}"`}
+                            </td>
                             <td style={{ padding: "10px", textAlign: "right", fontWeight: "600", color: "#2563eb" }}>
                               ₹{variant.price.toFixed(2)}
                             </td>
+                            <td style={{ padding: "10px", textAlign: "right" }}>{stockQty}</td>
+                            <td style={{ padding: "10px", textAlign: "right" }}>{soldQty}</td>
+                            <td style={{ padding: "10px", textAlign: "right", fontWeight: "600", color: isLowStock ? "#d97706" : "#111827" }}>
+                              {availableQty}
+                            </td>
+                            <td style={{ padding: "10px", textAlign: "center" }}>
+                              <span style={{
+                                padding: "4px 8px",
+                                borderRadius: "4px",
+                                fontSize: "12px",
+                                fontWeight: "600",
+                                backgroundColor: isLowStock ? "#fde68a" : "#dcfce7",
+                                color: isLowStock ? "#92400e" : "#166534"
+                              }}>
+                                {isLowStock ? "Reorder" : "OK"}
+                              </span>
+                            </td>
                           </tr>
-                        ))}
+                        )})}
                       </tbody>
                     </table>
                   </div>
@@ -480,7 +679,7 @@ export default function Products() {
           Product notes
         </h3>
         <p style={{ margin: "0", fontSize: "13px", color: "#666" }}>
-          New products are saved to the server and available immediately in billing.
+          New products are saved to the server and available immediately in billing. Sold quantity is calculated from invoices.
         </p>
       </div>
     </PageWrapper>

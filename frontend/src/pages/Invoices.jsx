@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchInvoices, updateInvoicePayment } from "../services/api";
 import PageWrapper from "../components/PageWrapper";
+import { useSearchParams } from "react-router-dom";
 
 export default function Invoices() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [invoices, setInvoices] = useState([]);
   const [filteredInvoices, setFilteredInvoices] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -12,6 +14,9 @@ export default function Invoices() {
   const [error, setError] = useState("");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [selectedInvoiceDetails, setSelectedInvoiceDetails] = useState(null);
+  const invoiceDetailsRef = useRef(null);
+  const invoiceDetailsPrimaryActionRef = useRef(null);
   const [paymentData, setPaymentData] = useState({
     paymentStatus: "Recorded",
     paymentMode: "Cash",
@@ -21,6 +26,8 @@ export default function Invoices() {
   });
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
+  const getPaymentStatusLabel = (status) => (status === "Recorded" ? "Paid" : "Partial");
 
   const applyFiltersAndSort = useCallback((data, search, status, sort) => {
     let result = [...data];
@@ -73,6 +80,30 @@ export default function Invoices() {
     applyFiltersAndSort(invoices, searchTerm, filterStatus, sortOrder);
   }, [searchTerm, filterStatus, sortOrder, invoices, applyFiltersAndSort]);
 
+  useEffect(() => {
+    if (!invoices.length) return;
+
+    const invoiceIdFromUrl = searchParams.get("invoiceId");
+    if (!invoiceIdFromUrl) {
+      setSelectedInvoiceDetails(null);
+      return;
+    }
+
+    const matched = invoices.find(inv => inv._id === invoiceIdFromUrl);
+    if (matched) {
+      setSelectedInvoiceDetails(matched);
+    }
+  }, [invoices, searchParams]);
+
+  useEffect(() => {
+    if (selectedInvoiceDetails && invoiceDetailsRef.current) {
+      invoiceDetailsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      requestAnimationFrame(() => {
+        invoiceDetailsPrimaryActionRef.current?.focus();
+      });
+    }
+  }, [selectedInvoiceDetails]);
+
   const getWhatsAppLink = (inv) => {
     const date = new Date(inv.createdAt).toLocaleDateString('en-IN');
     const paidAmount = inv.amountRecorded || 0;
@@ -85,7 +116,7 @@ export default function Invoices() {
     message += `💰 *Total Amount:* ₹${inv.total}\n`;
     message += `✅ *Paid:* ₹${paidAmount}\n`;
     message += `⏳ *Balance:* ₹${balance}\n\n`;
-    message += `*Payment Status:* ${inv.paymentStatus || 'Pending'}\n\n`;
+    message += `*Payment Status:* ${getPaymentStatusLabel(inv.paymentStatus)}\n\n`;
     message += `_Note: For the PDF invoice, please visit our office or contact us at 9595918751_\n\n`;
     message += `Thank you for your business! 🙏`;
     
@@ -106,9 +137,29 @@ export default function Invoices() {
     setShowPaymentModal(true);
   };
 
+  const handleOpenInvoiceDetails = (invoice) => {
+    setSelectedInvoiceDetails(invoice);
+    setSearchParams({ invoiceId: invoice._id });
+  };
+
+  const handleCloseInvoiceDetails = () => {
+    setSelectedInvoiceDetails(null);
+    setSearchParams({});
+  };
+
   const handleUpdatePayment = async () => {
     try {
-      await updateInvoicePayment(selectedInvoice._id, paymentData);
+      const totalAmount = Number(selectedInvoice.total) || 0;
+      const recordedAmount = Math.min(Math.max(Number(paymentData.amountRecorded) || 0, 0), totalAmount);
+      const balanceAmount = Math.max(totalAmount - recordedAmount, 0);
+      const calculatedPaymentStatus = balanceAmount === 0 ? "Recorded" : "Pending";
+
+      await updateInvoicePayment(selectedInvoice._id, {
+        ...paymentData,
+        paymentStatus: calculatedPaymentStatus,
+        amountRecorded: recordedAmount,
+        balanceAmount
+      });
       setShowPaymentModal(false);
       setSelectedInvoice(null);
       loadInvoices(); // Reload invoices
@@ -130,6 +181,43 @@ export default function Invoices() {
   return (
     <PageWrapper>
       <h2>Invoices</h2>
+
+      {selectedInvoiceDetails && (
+        <div ref={invoiceDetailsRef} style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1rem", marginBottom: "1rem", backgroundColor: "#fafafa" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", gap: "1rem", flexWrap: "wrap" }}>
+            <h3 style={{ margin: 0, fontSize: "16px" }}>Invoice Details</h3>
+            <button onClick={handleCloseInvoiceDetails} style={{ padding: "6px 10px", fontSize: "12px" }}>Close</button>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem", marginBottom: "0.75rem" }}>
+            <div><strong>Invoice No:</strong> {selectedInvoiceDetails.invoiceNumber}</div>
+            <div><strong>Date:</strong> {new Date(selectedInvoiceDetails.createdAt).toLocaleDateString()}</div>
+            <div><strong>Customer:</strong> {selectedInvoiceDetails.customerName}</div>
+            <div><strong>Mobile:</strong> {selectedInvoiceDetails.customerMobile}</div>
+            <div><strong>Total:</strong> ₹{Number(selectedInvoiceDetails.total || 0).toFixed(2)}</div>
+            <div><strong>Paid:</strong> ₹{Number(selectedInvoiceDetails.amountRecorded || 0).toFixed(2)}</div>
+            <div><strong>Balance:</strong> ₹{Number(selectedInvoiceDetails.balanceAmount || 0).toFixed(2)}</div>
+            <div><strong>Status:</strong> {getPaymentStatusLabel(selectedInvoiceDetails.paymentStatus)}</div>
+          </div>
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+            <a
+              href={`${API_BASE_URL}/api/invoices/${selectedInvoiceDetails._id}/pdf`}
+              target="_blank"
+              rel="noreferrer"
+              style={{ textDecoration: "none" }}
+            >
+              <button ref={invoiceDetailsPrimaryActionRef} style={{ padding: "6px 10px", fontSize: "12px" }}>📄 Open PDF</button>
+            </a>
+            {selectedInvoiceDetails.paymentStatus !== "Recorded" && (
+              <button
+                onClick={() => handleOpenPaymentModal(selectedInvoiceDetails)}
+                style={{ padding: "6px 10px", fontSize: "12px", backgroundColor: "#28a745", color: "white", border: "none", cursor: "pointer", borderRadius: "4px" }}
+              >
+                💰 Update Payment
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {error && (
         <div style={{ padding: "1rem", backgroundColor: "#fee", color: "#c33", borderRadius: "4px", marginBottom: "1rem" }}>
@@ -155,8 +243,8 @@ export default function Invoices() {
             className="form-select"
           >
             <option value="">All Status</option>
-            <option value="Recorded">Recorded</option>
-            <option value="Pending">Pending</option>
+            <option value="Recorded">Paid</option>
+            <option value="Pending">Partial</option>
           </select>
 
           <select
@@ -188,7 +276,15 @@ export default function Invoices() {
             <tbody>
               {filteredInvoices.map((inv) => (
                 <tr key={inv._id}>
-                  <td>{inv.invoiceNumber}</td>
+                  <td>
+                    <button
+                      onClick={() => handleOpenInvoiceDetails(inv)}
+                      style={{ background: "none", border: "none", padding: 0, margin: 0, color: "#2563eb", cursor: "pointer", textDecoration: "underline" }}
+                      title="Open invoice details"
+                    >
+                      {inv.invoiceNumber}
+                    </button>
+                  </td>
                   <td>{new Date(inv.createdAt).toLocaleDateString()}</td>
                   <td>{inv.customerName}</td>
                   <td>₹{inv.total?.toFixed(2)}</td>
@@ -201,7 +297,7 @@ export default function Invoices() {
                       color: inv.paymentStatus === "Recorded" ? "#155724" : "#856404",
                       fontWeight: "500"
                     }}>
-                      {inv.paymentStatus || "Pending"}
+                      {getPaymentStatusLabel(inv.paymentStatus)}
                     </span>
                   </td>
                   <td style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
@@ -294,11 +390,12 @@ export default function Invoices() {
                 type="number"
                 value={paymentData.amountRecorded}
                 onChange={(e) => {
-                  const recorded = parseFloat(e.target.value) || 0;
+                  const totalAmount = Number(selectedInvoice.total) || 0;
+                  const recorded = Math.min(Math.max(parseFloat(e.target.value) || 0, 0), totalAmount);
                   setPaymentData({
                     ...paymentData, 
                     amountRecorded: recorded,
-                    balanceAmount: selectedInvoice.total - recorded
+                    balanceAmount: Math.max(totalAmount - recorded, 0)
                   });
                 }}
                 className="form-input-full"

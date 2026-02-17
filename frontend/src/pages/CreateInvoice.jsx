@@ -1,9 +1,24 @@
 import { useEffect, useState } from "react";
 import PageWrapper from "../components/PageWrapper";
 import { fetchAllProducts, saveInvoice, fetchCustomers, createCustomer } from "../services/api";
+import logo from "../assets/national-traders-logo.svg";
 
 
 export default function CreateInvoice() {
+  const MM_PER_INCH = 25.4;
+
+  const formatInch = (value) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric <= 0) return "";
+    return Number(numeric.toFixed(3)).toString();
+  };
+
+  const getVariantDisplayLabel = (variant) => {
+    if (variant?.size_label) return variant.size_label;
+    const inch = formatInch(variant?.size_inch || Number(variant?.size_mm) / MM_PER_INCH);
+    return inch ? `${variant.size_mm} mm / ${inch}"` : `${variant.size_mm} mm`;
+  };
+
   const shop = {
     name: "National Traders",
     address: "Behind High School Ground, Pathri - 431506",
@@ -28,6 +43,7 @@ export default function CreateInvoice() {
   const [qty, setQty] = useState("");
   const [lineDiscount, setLineDiscount] = useState("");
   const [editId, setEditId] = useState(null);
+  const [duplicateHighlightId, setDuplicateHighlightId] = useState(null);
 
   // 🔑 INVOICE META
   const [invoiceId, setInvoiceId] = useState(null);
@@ -49,8 +65,6 @@ export default function CreateInvoice() {
     setSizeMM("");
     setQty("");
     setLineDiscount("");
-    setInvoiceId(null);
-    setInvoiceDate(null);
     setPaymentStatus("Pending");
     setPaymentMode("");
     setAmountRecorded(0);
@@ -101,6 +115,20 @@ export default function CreateInvoice() {
 
   const handleAddOrUpdate = () => {
     if (!productId || !sizeMM || !qty) return;
+
+    const selectedSizeLabel = (selectedVariant?.size_label || String(sizeMM || "")).trim().toLowerCase();
+    const duplicateItem = items.find(i => {
+      if (editId && i.id === editId) return false;
+      const existingSizeLabel = (i.sizeLabel || String(i.sizeMM || "")).trim().toLowerCase();
+      return i.productId === productId && existingSizeLabel === selectedSizeLabel;
+    });
+
+    if (duplicateItem) {
+      setDuplicateHighlightId(duplicateItem.id);
+      alert("This product with the same size is already added. Please edit the existing row.");
+      setTimeout(() => setDuplicateHighlightId(null), 2000);
+      return;
+    }
 
     const discountPct = Number(lineDiscount) || 0;
     const base = qty * price;
@@ -215,23 +243,27 @@ export default function CreateInvoice() {
       }
 
       // Save invoice
+      const recordedAmount = Math.min(Math.max(Number(amountRecorded) || 0, 0), totalAmount);
+      const balanceAmount = Math.max(totalAmount - recordedAmount, 0);
+      const calculatedPaymentStatus = balanceAmount === 0 ? "Recorded" : "Pending";
+
       const res = await saveInvoice({
         customerName,
         customerMobile,
         items,
         subTotal: totalPrice,
         total: totalAmount,
-        paymentStatus,
+        paymentStatus: calculatedPaymentStatus,
         paymentMode,
-        amountRecorded: paymentStatus === "Recorded" ? totalAmount : Number(amountRecorded) || 0,
-        balanceAmount: paymentStatus === "Recorded" ? 0 : totalAmount - (Number(amountRecorded) || 0)
+        amountRecorded: recordedAmount,
+        balanceAmount
       });
 
+      resetInvoiceItems();
       setInvoiceId(res.data._id);
       setInvoiceDate(res.data.createdAt);
       alert("Invoice saved successfully");
       console.log("✅ Invoice saved:", res.data);
-      resetInvoiceItems();
     } catch (err) {
       console.error("❌ Error saving invoice:", err.response?.data || err.message);
       alert(err.response?.data?.error || "Failed to save invoice");
@@ -251,9 +283,12 @@ export default function CreateInvoice() {
 
       {/* HEADER */}
       <div className="invoice-header">
-        <div>
+        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+          <img src={logo} alt="National Traders" style={{ width: "48px", height: "48px", borderRadius: "50%" }} />
+          <div>
           <b>{shop.name}</b><br />
           {shop.address}
+          </div>
         </div>
         <div style={{ textAlign: "right" }}>
           {shop.owner}<br />{shop.mobile}
@@ -367,7 +402,7 @@ export default function CreateInvoice() {
             <option value="">Size</option>
             {variants.map(v =>
               <option key={`${v.size_mm}-${v.size_label || ""}`} value={v.size_label || String(v.size_mm)}>
-                {v.size_label || `${v.size_mm} mm`}
+                {getVariantDisplayLabel(v)}
               </option>
             )}
           </select>
@@ -417,10 +452,18 @@ export default function CreateInvoice() {
               </tr>
             ) : (
               items.map((i, index) => (
-                <tr key={i.id}>
+                <tr
+                  key={i.id}
+                  style={{
+                    backgroundColor: duplicateHighlightId === i.id ? "#fff3cd" : "transparent",
+                    transition: "background-color 0.3s ease"
+                  }}
+                >
                   <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>{index + 1}</td>
                   <td style={{ border: "1px solid #ccc", padding: "10px" }}>{i.productName}</td>
-                  <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>{i.sizeLabel || `${i.sizeMM} mm`}</td>
+                  <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>
+                    {i.sizeLabel || `${i.sizeMM} mm / ${formatInch(Number(i.sizeMM) / MM_PER_INCH)}"`}
+                  </td>
                   <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>{i.qty}</td>
                   <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "right" }}>₹{i.price.toFixed(2)}</td>
                   <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>{i.discount}%</td>
@@ -487,8 +530,8 @@ export default function CreateInvoice() {
               setAmountRecorded(0);
             }
           }} className="form-select" style={{ width: "100%" }}>
-            <option value="Pending">Pending</option>
-            <option value="Recorded">Recorded</option>
+            <option value="Pending">Partial</option>
+            <option value="Recorded">Paid</option>
           </select>
         </div>
         
