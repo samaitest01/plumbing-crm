@@ -2,6 +2,26 @@ const express = require("express");
 const router = express.Router();
 const Invoice = require("../models/Invoice");
 const PDFDocument = require("pdfkit");
+const fs = require("fs");
+const path = require("path");
+const SVGtoPDF = require("svg-to-pdfkit");
+
+let cachedLogoSvg = null;
+const logoCandidates = [
+  path.join(__dirname, "../assets/national-traders-logo.svg"),
+  path.join(__dirname, "../../frontend/src/assets/national-traders-logo.svg")
+];
+
+for (const candidatePath of logoCandidates) {
+  try {
+    if (fs.existsSync(candidatePath)) {
+      cachedLogoSvg = fs.readFileSync(candidatePath, "utf8");
+      break;
+    }
+  } catch (err) {
+    cachedLogoSvg = null;
+  }
+}
 
 // SAVE INVOICE
 router.post("/", async (req, res) => {
@@ -21,7 +41,17 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ message: "Subtotal and total are required" });
     }
 
-    const invoice = await Invoice.create(req.body);
+    const totalAmount = Number(total) || 0;
+    const recordedAmount = Math.min(Math.max(Number(req.body.amountRecorded) || 0, 0), totalAmount);
+    const balanceAmount = Math.max(totalAmount - recordedAmount, 0);
+    const calculatedPaymentStatus = balanceAmount === 0 ? "Recorded" : "Pending";
+
+    const invoice = await Invoice.create({
+      ...req.body,
+      paymentStatus: calculatedPaymentStatus,
+      amountRecorded: recordedAmount,
+      balanceAmount
+    });
     res.status(201).json(invoice);
   } catch (err) {
     console.error("SAVE INVOICE ERROR:", err.message);
@@ -67,18 +97,27 @@ router.get("/", async (req, res) => {
 // UPDATE PAYMENT STATUS
 router.patch("/:id/payment", async (req, res) => {
   try {
-    const { paymentStatus, paymentMode, amountRecorded, balanceAmount, paymentDate } = req.body;
+    const { paymentMode, amountRecorded, paymentDate } = req.body;
     
     const invoice = await Invoice.findById(req.params.id);
     if (!invoice) {
       return res.status(404).json({ message: "Invoice not found" });
     }
 
-    // Update payment fields
-    if (paymentStatus !== undefined) invoice.paymentStatus = paymentStatus;
+    // Update payment fields with normalized status from amount/balance
     if (paymentMode !== undefined) invoice.paymentMode = paymentMode;
-    if (amountRecorded !== undefined) invoice.amountRecorded = amountRecorded;
-    if (balanceAmount !== undefined) invoice.balanceAmount = balanceAmount;
+
+    const totalAmount = Number(invoice.total) || 0;
+    const incomingRecorded = amountRecorded !== undefined
+      ? Number(amountRecorded) || 0
+      : Number(invoice.amountRecorded) || 0;
+    const normalizedRecorded = Math.min(Math.max(incomingRecorded, 0), totalAmount);
+    const normalizedBalance = Math.max(totalAmount - normalizedRecorded, 0);
+
+    invoice.amountRecorded = normalizedRecorded;
+    invoice.balanceAmount = normalizedBalance;
+    invoice.paymentStatus = normalizedBalance === 0 ? "Recorded" : "Pending";
+
     if (paymentDate !== undefined) invoice.paymentDate = paymentDate;
 
     await invoice.save();
@@ -96,6 +135,7 @@ router.get("/:id/pdf", async (req, res) => {
     if (!invoice) return res.status(404).send("Invoice not found");
 
     const safe = (n) => (typeof n === "number" ? n : 0);
+    const paymentStatusLabel = invoice.paymentStatus === "Recorded" ? "Paid" : "Partial";
 
     const doc = new PDFDocument({ margin: 30, size: 'A4' });
     res.setHeader("Content-Type", "application/pdf");
@@ -107,10 +147,35 @@ router.get("/:id/pdf", async (req, res) => {
     let currentY = 30;
 
     // HEADER
-    doc.fontSize(22).font("Helvetica-Bold").fillColor("#000").text("National Traders", { align: "center" });
-    doc.fontSize(9).font("Helvetica").fillColor("#000").text("Behind High School Ground, Pathri - 431506 | Mujahid Shaikh | 9595918751", { align: "center" });
-    
-    currentY = doc.y + 10;
+    const logoSize = 68;
+    const headerTop = 24;
+    const hasLogo = Boolean(cachedLogoSvg);
+
+    if (hasLogo) {
+      SVGtoPDF(doc, cachedLogoSvg, leftMargin, headerTop, {
+        width: logoSize,
+        height: logoSize,
+        preserveAspectRatio: "xMidYMid meet"
+      });
+    }
+
+    const headerTextX = hasLogo ? leftMargin + logoSize + 14 : leftMargin;
+    const headerTextWidth = hasLogo ? pageWidth - (logoSize + 14) : pageWidth;
+
+    doc.fontSize(22).font("Helvetica-Bold").fillColor("#000").text(
+      "National Traders",
+      headerTextX,
+      headerTop + 6,
+      { width: headerTextWidth, align: "center" }
+    );
+    doc.fontSize(10).font("Helvetica").fillColor("#000").text(
+      "Behind High School Ground, Pathri - 431506 | Mujahid Shaikh | 9595918751",
+      headerTextX,
+      headerTop + 38,
+      { width: headerTextWidth, align: "center" }
+    );
+
+    currentY = headerTop + logoSize + 14;
 
     // INVOICE TITLE
     doc.fontSize(16).font("Helvetica-Bold").fillColor("#000");
@@ -132,7 +197,7 @@ router.get("/:id/pdf", async (req, res) => {
     doc.text(`Date: ${new Date(invoice.createdAt).toLocaleDateString('en-IN')}`, col2, currentY + 5);
     doc.text(`Customer: ${invoice.customerName}`, col1, currentY + 20);
     doc.text(`Mobile: ${invoice.customerMobile}`, col2, currentY + 20);
-    doc.text(`Status: ${invoice.paymentStatus || 'Pending'}`, col3, currentY + 5);
+    doc.text(`Status: ${paymentStatusLabel}`, col3, currentY + 5);
     doc.text(`Mode: ${invoice.paymentMode || 'N/A'}`, col3, currentY + 20);
     
     currentY += infoBoxHeight + 12;
@@ -285,7 +350,7 @@ router.get("/:id/pdf", async (req, res) => {
     const paymentCol1 = leftMargin + 5;
     const paymentCol2 = leftMargin + summaryBoxWidth / 2;
     
-    doc.text(`Status: ${invoice.paymentStatus || "N/A"}`, paymentCol1, currentY);
+    doc.text(`Status: ${paymentStatusLabel}`, paymentCol1, currentY);
     doc.text(`Amount Paid: Rs. ${safe(invoice.amountRecorded).toFixed(2)}`, paymentCol2, currentY);
     
     currentY += 15;

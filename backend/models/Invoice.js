@@ -45,7 +45,6 @@ const InvoiceSchema = new mongoose.Schema({
 
 // Add indexes for better query performance
 InvoiceSchema.index({ customerMobile: 1, createdAt: -1 });
-InvoiceSchema.index({ invoiceNumber: 1 });
 InvoiceSchema.index({ createdAt: -1 });
 
 // Pre-save middleware to generate unique invoice number: INVDDMMYYMMSS

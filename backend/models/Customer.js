@@ -22,7 +22,6 @@ const CustomerSchema = new mongoose.Schema({
 });
 
 // Index for faster queries
-CustomerSchema.index({ mobile: 1 });
 CustomerSchema.index({ name: 1 });
 
 module.exports = mongoose.model("Customer", CustomerSchema);

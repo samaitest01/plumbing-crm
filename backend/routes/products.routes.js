@@ -5,6 +5,41 @@ const path = require("path");
 const router = express.Router();
 
 const productsFilePath = path.join(__dirname, "..", "data", "products.json");
+const MM_PER_INCH = 25.4;
+
+const roundTo = (value, decimals) => Number(value.toFixed(decimals));
+
+const normalizeVariant = (variant) => {
+  const sizeMMInput = Number(variant.size_mm);
+  const sizeInchInput = Number(variant.size_inch);
+  const price = Number(variant.price);
+  const stockQtyInput = Number(variant.stock_qty);
+  const reorderLevelInput = Number(variant.reorder_level);
+
+  const hasSizeMM = Number.isFinite(sizeMMInput) && sizeMMInput > 0;
+  const hasSizeInch = Number.isFinite(sizeInchInput) && sizeInchInput > 0;
+
+  if ((!hasSizeMM && !hasSizeInch) || !Number.isFinite(price)) {
+    throw new Error("Invalid variant size or price");
+  }
+
+  const sizeMM = hasSizeMM ? sizeMMInput : roundTo(sizeInchInput * MM_PER_INCH, 2);
+  const sizeInch = hasSizeInch ? sizeInchInput : roundTo(sizeMM / MM_PER_INCH, 3);
+
+  const entry = {
+    size_mm: sizeMM,
+    size_inch: sizeInch,
+    price,
+    stock_qty: Number.isFinite(stockQtyInput) && stockQtyInput >= 0 ? stockQtyInput : 0,
+    reorder_level: Number.isFinite(reorderLevelInput) && reorderLevelInput >= 0 ? reorderLevelInput : 0
+  };
+
+  if (variant.size_label) {
+    entry.size_label = String(variant.size_label);
+  }
+
+  return entry;
+};
 
 const loadProducts = () => {
   const raw = fs.readFileSync(productsFilePath, "utf8");
@@ -52,18 +87,7 @@ router.post("/", (req, res) => {
       return res.status(400).json({ message: "At least one variant is required" });
     }
 
-    const normalizedVariants = variants.map((variant) => {
-      const size = Number(variant.size_mm);
-      const price = Number(variant.price);
-      if (!Number.isFinite(size) || !Number.isFinite(price)) {
-        throw new Error("Invalid variant size or price");
-      }
-      const entry = { size_mm: size, price };
-      if (variant.size_label) {
-        entry.size_label = String(variant.size_label);
-      }
-      return entry;
-    });
+    const normalizedVariants = variants.map(normalizeVariant);
 
     const products = loadProducts();
     let targetSystem = products.find((entry) => entry.system === systemKey);
@@ -145,18 +169,7 @@ router.put("/:system/:productId", (req, res) => {
       if (!Array.isArray(product.variants) || product.variants.length === 0) {
         return res.status(400).json({ message: "At least one variant is required" });
       }
-      variants = product.variants.map((variant) => {
-        const size = Number(variant.size_mm);
-        const price = Number(variant.price);
-        if (!Number.isFinite(size) || !Number.isFinite(price)) {
-          throw new Error("Invalid variant size or price");
-        }
-        const entry = { size_mm: size, price };
-        if (variant.size_label) {
-          entry.size_label = String(variant.size_label);
-        }
-        return entry;
-      });
+      variants = product.variants.map(normalizeVariant);
     }
 
     const newId = slugify(name);
