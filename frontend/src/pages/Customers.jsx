@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { fetchCustomers, createCustomer, fetchCustomerDetails, updateInvoicePayment } from "../services/api";
 import PageWrapper from "../components/PageWrapper";
 
+const roundAmount = (value) => Math.round(Number(value) || 0);
+
 export default function Customers() {
   const [customers, setCustomers] = useState([]);
   const [name, setName] = useState("");
@@ -79,17 +81,17 @@ export default function Customers() {
   };
 
   const handleOpenPaymentModal = (invoice) => {
-    const total = invoice.total || 0;
+    const total = roundAmount(invoice.total || 0);
     const currentBalance = typeof invoice.balanceAmount === "number"
-      ? invoice.balanceAmount
-      : Math.max(total - (invoice.amountRecorded || 0), 0);
+      ? roundAmount(invoice.balanceAmount)
+      : Math.max(total - roundAmount(invoice.amountRecorded || 0), 0);
 
     setSelectedInvoice(invoice);
     setPaymentData({
       paymentStatus: currentBalance === 0 ? "Recorded" : "Pending",
       paymentMode: invoice.paymentMode || "Cash",
-      amountRecorded: currentBalance,
-      balanceAmount: Math.max(total - currentBalance, 0),
+      amountRecorded: roundAmount(invoice.amountRecorded || 0),
+      balanceAmount: currentBalance,
       paymentDate: new Date().toISOString().split("T")[0]
     });
     setShowPaymentModal(true);
@@ -97,8 +99,8 @@ export default function Customers() {
 
   const handleUpdatePayment = async () => {
     if (!selectedInvoice) return;
-    const total = selectedInvoice.total || 0;
-    const recorded = Math.min(Number(paymentData.amountRecorded) || 0, total);
+    const total = roundAmount(selectedInvoice.total || 0);
+    const recorded = Math.min(roundAmount(paymentData.amountRecorded), total);
     const balanceAmount = Math.max(total - recorded, 0);
     const nextStatus = balanceAmount === 0 ? "Recorded" : paymentData.paymentStatus;
 
@@ -297,9 +299,9 @@ export default function Customers() {
                         <tr key={inv._id}>
                           <td>{inv.invoiceNumber}</td>
                           <td>{new Date(inv.createdAt).toLocaleDateString()}</td>
-                          <td>₹{inv.total?.toFixed(2)}</td>
-                          <td>₹{(inv.amountRecorded || 0).toFixed(2)}</td>
-                          <td>₹{(inv.balanceAmount || (inv.total - (inv.amountRecorded || 0))).toFixed(2)}</td>
+                          <td>₹{roundAmount(inv.total)}</td>
+                          <td>₹{roundAmount(inv.amountRecorded || 0)}</td>
+                          <td>₹{roundAmount(inv.balanceAmount || (inv.total - (inv.amountRecorded || 0)))}</td>
                           <td>
                             <span style={{
                               padding: "4px 8px",
@@ -375,8 +377,8 @@ export default function Customers() {
                           max={selectedInvoice.total || 0}
                           value={paymentData.amountRecorded}
                           onChange={(e) => {
-                            const total = selectedInvoice.total || 0;
-                            const amount = Math.min(Number(e.target.value) || 0, total);
+                            const total = roundAmount(selectedInvoice.total || 0);
+                            const amount = Math.min(roundAmount(e.target.value), total);
                             setPaymentData(prev => ({
                               ...prev,
                               amountRecorded: amount,
@@ -391,7 +393,7 @@ export default function Customers() {
                         <label style={{ display: "block", marginBottom: "0.25rem", fontWeight: "500" }}>Balance Amount</label>
                         <input
                           type="number"
-                          value={(paymentData.balanceAmount || 0).toFixed(2)}
+                          value={roundAmount(paymentData.balanceAmount || 0)}
                           disabled
                           className="form-input"
                           style={{ width: "100%", backgroundColor: "#f5f5f5" }}

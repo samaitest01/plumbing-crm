@@ -1,17 +1,100 @@
 import { useCallback, useEffect, useState } from "react";
 import PageWrapper from "../components/PageWrapper";
-import { fetchAllProducts, createProduct, updateProduct, deleteProduct, fetchInvoices } from "../services/api";
+import { fetchAllProducts, createProduct, updateProduct, deleteProduct, fetchInvoices, updateProductVariantStockQty } from "../services/api";
 
+// Unit conversion constants/helpers for size normalization.
 const MM_PER_INCH = 25.4;
 const roundTo = (value, decimals) => Number(value.toFixed(decimals));
 
+const gcd = (a, b) => {
+  let x = Math.abs(a);
+  let y = Math.abs(b);
+  while (y) {
+    const temp = y;
+    y = x % y;
+    x = temp;
+  }
+  return x || 1;
+};
+
+const formatInchFraction = (value) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) return "";
+
+  const whole = Math.floor(numeric);
+  const fractional = numeric - whole;
+  const denominator = 16;
+  const numeratorRaw = Math.round(fractional * denominator);
+
+  if (numeratorRaw === 0) {
+    return whole ? String(whole) : "0";
+  }
+
+  if (numeratorRaw === denominator) {
+    return String(whole + 1);
+  }
+
+  const divisor = gcd(numeratorRaw, denominator);
+  const numerator = numeratorRaw / divisor;
+  const reducedDenominator = denominator / divisor;
+
+  if (!whole) {
+    return `${numerator}/${reducedDenominator}`;
+  }
+
+  return `${whole}-${numerator}/${reducedDenominator}`;
+};
+
+const parseInchInput = (value) => {
+  if (value === undefined || value === null) return null;
+  const raw = String(value).trim();
+  if (!raw) return null;
+
+  const numeric = Number(raw);
+  if (Number.isFinite(numeric) && numeric > 0) {
+    return numeric;
+  }
+
+  const normalized = raw.replace(/\s+/g, "");
+
+  const mixedMatch = normalized.match(/^(\d+)-(\d+)\/(\d+)$/);
+  if (mixedMatch) {
+    const whole = Number(mixedMatch[1]);
+    const num = Number(mixedMatch[2]);
+    const den = Number(mixedMatch[3]);
+    if (Number.isFinite(whole) && Number.isFinite(num) && Number.isFinite(den) && den > 0 && num > 0) {
+      return whole + num / den;
+    }
+  }
+
+  const fracMatch = normalized.match(/^(\d+)\/(\d+)$/);
+  if (fracMatch) {
+    const num = Number(fracMatch[1]);
+    const den = Number(fracMatch[2]);
+    if (Number.isFinite(num) && Number.isFinite(den) && den > 0 && num > 0) {
+      return num / den;
+    }
+  }
+
+  return null;
+};
+
+const normalizeInchValue = (value) => {
+  const parsed = parseInchInput(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return "";
+  return formatInchFraction(parsed);
+};
+
 const getVariantSizeInch = (variant) => {
-  const explicitInch = Number(variant?.size_inch);
-  if (Number.isFinite(explicitInch) && explicitInch > 0) return explicitInch;
+  const inchFromInch = normalizeInchValue(variant?.size_inch);
+  if (inchFromInch) return inchFromInch;
+
+  const inchFromLabel = normalizeInchValue(variant?.size_label);
+  if (inchFromLabel) return inchFromLabel;
 
   const sizeMM = Number(variant?.size_mm);
   if (Number.isFinite(sizeMM) && sizeMM > 0) {
-    return roundTo(sizeMM / MM_PER_INCH, 3);
+    return formatInchFraction(sizeMM / MM_PER_INCH);
   }
 
   return null;
@@ -19,6 +102,7 @@ const getVariantSizeInch = (variant) => {
 
 const getVariantKey = (productId, sizeMM) => `${productId}__${Number(sizeMM).toFixed(2)}`;
 
+// Builds sold-quantity lookup from invoice items, keyed by product + variant size.
 const buildSoldMap = (invoices) => {
   const sold = {};
   invoices.forEach((invoice) => {
@@ -34,9 +118,12 @@ export default function Products() {
   const [systems, setSystems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [variantUpdatingKey, setVariantUpdatingKey] = useState("");
+  const [activeVariantEditKey, setActiveVariantEditKey] = useState("");
   const [formError, setFormError] = useState("");
   const [editing, setEditing] = useState(null);
   const [soldMap, setSoldMap] = useState({});
+  const [variantStockDrafts, setVariantStockDrafts] = useState({});
   const [form, setForm] = useState({
     system: "",
     newSystem: "",
@@ -46,13 +133,13 @@ export default function Products() {
     length_m: "",
     size_mm: "",
     size_inch: "",
-    size_label: "",
     price: "",
     stock_qty: "",
     reorder_level: ""
   });
   const [variants, setVariants] = useState([]);
 
+  // Loads product catalog and invoice-driven sold stats used in inventory view.
   const loadProducts = useCallback(async () => {
     try {
       const [productsRes, invoicesRes] = await Promise.all([
@@ -80,22 +167,7 @@ export default function Products() {
 
   const handleSizeMMChange = (value) => {
     setFormError("");
-    if (value === "") {
-      setForm(prev => ({ ...prev, size_mm: "", size_inch: "" }));
-      return;
-    }
-
-    const numericMM = Number(value);
-    if (!Number.isFinite(numericMM) || numericMM <= 0) {
-      setForm(prev => ({ ...prev, size_mm: value, size_inch: "" }));
-      return;
-    }
-
-    setForm(prev => ({
-      ...prev,
-      size_mm: value,
-      size_inch: String(roundTo(numericMM / MM_PER_INCH, 3))
-    }));
+    setForm(prev => ({ ...prev, size_mm: value }));
   };
 
   const handleSizeInchChange = (value) => {
@@ -105,7 +177,7 @@ export default function Products() {
       return;
     }
 
-    const numericInch = Number(value);
+    const numericInch = parseInchInput(value);
     if (!Number.isFinite(numericInch) || numericInch <= 0) {
       setForm(prev => ({ ...prev, size_inch: value, size_mm: "" }));
       return;
@@ -113,14 +185,14 @@ export default function Products() {
 
     setForm(prev => ({
       ...prev,
-      size_inch: value,
+      size_inch: normalizeInchValue(value),
       size_mm: String(roundTo(numericInch * MM_PER_INCH, 2))
     }));
   };
 
   const handleAddVariant = () => {
     const sizeMMInput = Number(form.size_mm);
-    const sizeInchInput = Number(form.size_inch);
+    const sizeInchInput = parseInchInput(form.size_inch);
     const price = Number(form.price);
 
     const hasSizeMM = Number.isFinite(sizeMMInput) && sizeMMInput > 0;
@@ -132,7 +204,7 @@ export default function Products() {
     }
 
     const sizeMM = hasSizeMM ? sizeMMInput : roundTo(sizeInchInput * MM_PER_INCH, 2);
-    const sizeInch = hasSizeInch ? sizeInchInput : roundTo(sizeMM / MM_PER_INCH, 3);
+    const sizeInch = hasSizeInch ? normalizeInchValue(form.size_inch) : formatInchFraction(sizeMM / MM_PER_INCH);
     const stockQty = Number(form.stock_qty);
     const reorderLevel = Number(form.reorder_level);
 
@@ -141,8 +213,6 @@ export default function Products() {
       return;
     }
 
-    const computedLabel = `${roundTo(sizeInch, 3)}" (${roundTo(sizeMM, 2)} mm)`;
-
     setVariants(prev => ([
       ...prev,
       {
@@ -150,8 +220,7 @@ export default function Products() {
         size_inch: sizeInch,
         price,
         stock_qty: Number.isFinite(stockQty) && stockQty >= 0 ? stockQty : 0,
-        reorder_level: Number.isFinite(reorderLevel) && reorderLevel >= 0 ? reorderLevel : 0,
-        size_label: form.size_label ? form.size_label.trim() : computedLabel
+        reorder_level: Number.isFinite(reorderLevel) && reorderLevel >= 0 ? reorderLevel : 0
       }
     ]));
 
@@ -159,7 +228,6 @@ export default function Products() {
       ...prev,
       size_mm: "",
       size_inch: "",
-      size_label: "",
       price: "",
       stock_qty: "",
       reorder_level: ""
@@ -180,7 +248,6 @@ export default function Products() {
       length_m: "",
       size_mm: "",
       size_inch: "",
-      size_label: "",
       price: "",
       stock_qty: "",
       reorder_level: ""
@@ -199,7 +266,6 @@ export default function Products() {
       length_m: product.length_m ? String(product.length_m) : "",
       size_mm: "",
       size_inch: "",
-      size_label: "",
       price: "",
       stock_qty: "",
       reorder_level: ""
@@ -277,6 +343,57 @@ export default function Products() {
       alert("Product deleted");
     } catch (err) {
       alert(err.response?.data?.message || "Failed to delete product");
+    }
+  };
+
+  const getVariantRowKey = (systemName, productId, sizeMM) => `${systemName}__${productId}__${Number(sizeMM).toFixed(2)}`;
+
+  // Draft values let each row keep temporary stock edits before user clicks Save.
+  const getVariantDraftValue = (systemName, productId, sizeMM, stockQty) => {
+    const key = getVariantRowKey(systemName, productId, sizeMM);
+    if (Object.prototype.hasOwnProperty.call(variantStockDrafts, key)) {
+      return variantStockDrafts[key];
+    }
+    return String(Number(stockQty) || 0);
+  };
+
+  const handleVariantDraftChange = (systemName, productId, sizeMM, value) => {
+    const key = getVariantRowKey(systemName, productId, sizeMM);
+    const sanitized = String(value).replace(/[^0-9]/g, "");
+    setVariantStockDrafts(prev => ({ ...prev, [key]: sanitized }));
+  };
+
+  const handleUpdateSingleVariantStock = async (systemName, productId, sizeMM, currentStockQty) => {
+    const key = getVariantRowKey(systemName, productId, sizeMM);
+
+    // First click enters edit mode for that row.
+    if (activeVariantEditKey !== key) {
+      setActiveVariantEditKey(key);
+      setVariantStockDrafts(prev => ({ ...prev, [key]: String(Number(currentStockQty) || 0) }));
+      return;
+    }
+
+    const rawValue = Object.prototype.hasOwnProperty.call(variantStockDrafts, key)
+      ? variantStockDrafts[key]
+      : String(Number(currentStockQty) || 0);
+    const stockQty = Number(rawValue);
+
+    if (!Number.isFinite(stockQty) || stockQty < 0) {
+      alert("Enter a valid stock quantity (0 or greater)");
+      return;
+    }
+
+    setVariantUpdatingKey(key);
+    try {
+      // Second click (Save) persists stock value to backend and refreshes inventory view.
+      await updateProductVariantStockQty(systemName, productId, sizeMM, stockQty);
+      await loadProducts();
+      setVariantStockDrafts(prev => ({ ...prev, [key]: String(stockQty) }));
+      setActiveVariantEditKey("");
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to update variant stock quantity");
+    } finally {
+      setVariantUpdatingKey("");
     }
   };
 
@@ -404,17 +521,7 @@ export default function Products() {
                 value={form.size_inch}
                 onChange={(e) => handleSizeInchChange(e.target.value)}
                 className="form-input"
-                placeholder="e.g. 0.5"
-                style={{ width: "100%" }}
-              />
-            </div>
-            <div>
-              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Size Label</label>
-              <input
-                value={form.size_label}
-                onChange={(e) => handleFormChange("size_label", e.target.value)}
-                className="form-input"
-                placeholder="Optional"
+                placeholder="e.g. 1/2 or 1-1/4"
                 style={{ width: "100%" }}
               />
             </div>
@@ -460,7 +567,6 @@ export default function Products() {
                   <tr>
                     <th>Size (mm)</th>
                     <th>Size (inch)</th>
-                    <th>Label</th>
                     <th>Price (Rs.)</th>
                     <th>Stock</th>
                     <th>Reorder</th>
@@ -472,7 +578,6 @@ export default function Products() {
                     <tr key={`${variant.size_mm}-${idx}`}>
                       <td>{variant.size_mm}</td>
                       <td>{getVariantSizeInch(variant) ?? "-"}</td>
-                      <td>{variant.size_label || "-"}</td>
                       <td>{variant.price}</td>
                       <td>{variant.stock_qty ?? 0}</td>
                       <td>{variant.reorder_level ?? 0}</td>
@@ -621,10 +726,20 @@ export default function Products() {
                             backgroundColor: "#f0f0f0",
                             fontWeight: "600"
                           }}>Status</th>
+                          <th style={{ 
+                            padding: "10px", 
+                            textAlign: "center", 
+                            borderBottom: "2px solid #333",
+                            backgroundColor: "#f0f0f0",
+                            fontWeight: "600"
+                          }}>Update</th>
                         </tr>
                       </thead>
                       <tbody>
                         {product.variants.map((variant, vIdx) => {
+                          const variantRowKey = getVariantRowKey(system.system, product.id, variant.size_mm);
+                          const isUpdatingThisVariant = variantUpdatingKey === variantRowKey;
+                          const isEditingThisVariant = activeVariantEditKey === variantRowKey;
                           const soldQty = soldMap[getVariantKey(product.id, variant.size_mm)] || 0;
                           const stockQty = Number(variant.stock_qty) || 0;
                           const availableQty = stockQty - soldQty;
@@ -634,7 +749,7 @@ export default function Products() {
                           return (
                           <tr key={vIdx} style={{ borderBottom: "1px solid #ddd", backgroundColor: isLowStock ? "#fff7e6" : "transparent" }}>
                             <td style={{ padding: "10px" }}>
-                              {variant.size_label || `${variant.size_mm} mm / ${getVariantSizeInch(variant)}"`}
+                              {`${variant.size_mm} mm / ${getVariantSizeInch(variant) || "-"}`}
                             </td>
                             <td style={{ padding: "10px", textAlign: "right", fontWeight: "600", color: "#2563eb" }}>
                               ₹{variant.price.toFixed(2)}
@@ -655,6 +770,35 @@ export default function Products() {
                               }}>
                                 {isLowStock ? "Reorder" : "OK"}
                               </span>
+                            </td>
+                            <td style={{ padding: "6px 8px", textAlign: "center" }}>
+                              {isEditingThisVariant ? (
+                                <div style={{ display: "flex", justifyContent: "center", gap: "4px", alignItems: "center" }}>
+                                  <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    value={getVariantDraftValue(system.system, product.id, variant.size_mm, stockQty)}
+                                    onChange={(e) => handleVariantDraftChange(system.system, product.id, variant.size_mm, e.target.value)}
+                                    disabled={isUpdatingThisVariant}
+                                    className="form-input"
+                                    style={{ width: "4.5ch", padding: "3px 2px", fontSize: "12px", textAlign: "right" }}
+                                  />
+                                  <button
+                                    onClick={() => handleUpdateSingleVariantStock(system.system, product.id, variant.size_mm, stockQty)}
+                                    disabled={isUpdatingThisVariant}
+                                    style={{ padding: "4px 8px", fontSize: "12px", lineHeight: 1.2 }}
+                                  >
+                                    {isUpdatingThisVariant ? "..." : "Save"}
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => handleUpdateSingleVariantStock(system.system, product.id, variant.size_mm, stockQty)}
+                                  style={{ padding: "4px 8px", fontSize: "12px", lineHeight: 1.2 }}
+                                >
+                                  Update
+                                </button>
+                              )}
                             </td>
                           </tr>
                         )})}

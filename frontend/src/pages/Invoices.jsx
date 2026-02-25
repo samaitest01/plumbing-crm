@@ -3,6 +3,8 @@ import { fetchInvoices, updateInvoicePayment } from "../services/api";
 import PageWrapper from "../components/PageWrapper";
 import { useSearchParams } from "react-router-dom";
 
+const roundAmount = (value) => Math.round(Number(value) || 0);
+
 export default function Invoices() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [invoices, setInvoices] = useState([]);
@@ -20,7 +22,7 @@ export default function Invoices() {
   const [paymentData, setPaymentData] = useState({
     paymentStatus: "Recorded",
     paymentMode: "Cash",
-    amountRecorded: 0,
+    additionalAmount: 0,
     balanceAmount: 0,
     paymentDate: new Date().toISOString().split('T')[0]
   });
@@ -106,14 +108,14 @@ export default function Invoices() {
 
   const getWhatsAppLink = (inv) => {
     const date = new Date(inv.createdAt).toLocaleDateString('en-IN');
-    const paidAmount = inv.amountRecorded || 0;
-    const balance = inv.balanceAmount || 0;
+    const paidAmount = roundAmount(inv.amountRecorded || 0);
+    const balance = roundAmount(inv.balanceAmount || 0);
     
     let message = `*INVOICE FROM NATIONAL TRADERS*\n\n`;
     message += `📋 *Invoice No:* ${inv.invoiceNumber}\n`;
     message += `📅 *Date:* ${date}\n`;
     message += `👤 *Customer:* ${inv.customerName}\n\n`;
-    message += `💰 *Total Amount:* ₹${inv.total}\n`;
+    message += `💰 *Total Amount:* ₹${roundAmount(inv.total)}\n`;
     message += `✅ *Paid:* ₹${paidAmount}\n`;
     message += `⏳ *Balance:* ₹${balance}\n\n`;
     message += `*Payment Status:* ${getPaymentStatusLabel(inv.paymentStatus)}\n\n`;
@@ -126,12 +128,12 @@ export default function Invoices() {
 
   const handleOpenPaymentModal = (invoice) => {
     setSelectedInvoice(invoice);
-    const currentBalance = invoice.balanceAmount || invoice.total;
+    const currentBalance = roundAmount(invoice.balanceAmount || invoice.total);
     setPaymentData({
       paymentStatus: "Recorded",
       paymentMode: invoice.paymentMode || "Cash",
-      amountRecorded: currentBalance,
-      balanceAmount: 0,
+      additionalAmount: 0,
+      balanceAmount: currentBalance,
       paymentDate: new Date().toISOString().split('T')[0]
     });
     setShowPaymentModal(true);
@@ -149,8 +151,10 @@ export default function Invoices() {
 
   const handleUpdatePayment = async () => {
     try {
-      const totalAmount = Number(selectedInvoice.total) || 0;
-      const recordedAmount = Math.min(Math.max(Number(paymentData.amountRecorded) || 0, 0), totalAmount);
+      const totalAmount = roundAmount(selectedInvoice.total);
+      const existingRecordedAmount = roundAmount(selectedInvoice.amountRecorded);
+      const additionalAmount = Math.max(roundAmount(paymentData.additionalAmount), 0);
+      const recordedAmount = Math.min(existingRecordedAmount + additionalAmount, totalAmount);
       const balanceAmount = Math.max(totalAmount - recordedAmount, 0);
       const calculatedPaymentStatus = balanceAmount === 0 ? "Recorded" : "Pending";
 
@@ -193,9 +197,9 @@ export default function Invoices() {
             <div><strong>Date:</strong> {new Date(selectedInvoiceDetails.createdAt).toLocaleDateString()}</div>
             <div><strong>Customer:</strong> {selectedInvoiceDetails.customerName}</div>
             <div><strong>Mobile:</strong> {selectedInvoiceDetails.customerMobile}</div>
-            <div><strong>Total:</strong> ₹{Number(selectedInvoiceDetails.total || 0).toFixed(2)}</div>
-            <div><strong>Paid:</strong> ₹{Number(selectedInvoiceDetails.amountRecorded || 0).toFixed(2)}</div>
-            <div><strong>Balance:</strong> ₹{Number(selectedInvoiceDetails.balanceAmount || 0).toFixed(2)}</div>
+            <div><strong>Total:</strong> ₹{roundAmount(selectedInvoiceDetails.total || 0)}</div>
+            <div><strong>Paid:</strong> ₹{roundAmount(selectedInvoiceDetails.amountRecorded || 0)}</div>
+            <div><strong>Balance:</strong> ₹{roundAmount(selectedInvoiceDetails.balanceAmount || 0)}</div>
             <div><strong>Status:</strong> {getPaymentStatusLabel(selectedInvoiceDetails.paymentStatus)}</div>
           </div>
           <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
@@ -287,7 +291,7 @@ export default function Invoices() {
                   </td>
                   <td>{new Date(inv.createdAt).toLocaleDateString()}</td>
                   <td>{inv.customerName}</td>
-                  <td>₹{inv.total?.toFixed(2)}</td>
+                  <td>₹{roundAmount(inv.total)}</td>
                   <td>
                     <span style={{
                       padding: "4px 8px",
@@ -367,8 +371,9 @@ export default function Invoices() {
             <h3>Mark Invoice as Paid</h3>
             <p><strong>Invoice:</strong> {selectedInvoice.invoiceNumber}</p>
             <p><strong>Customer:</strong> {selectedInvoice.customerName}</p>
-            <p><strong>Total Amount:</strong> ₹{selectedInvoice.total?.toFixed(2)}</p>
-            <p><strong>Current Balance:</strong> ₹{(selectedInvoice.balanceAmount || selectedInvoice.total)?.toFixed(2)}</p>
+            <p><strong>Total Amount:</strong> ₹{roundAmount(selectedInvoice.total)}</p>
+            <p><strong>Already Recorded:</strong> ₹{roundAmount(selectedInvoice.amountRecorded || 0)}</p>
+            <p><strong>Current Balance:</strong> ₹{roundAmount(selectedInvoice.balanceAmount || selectedInvoice.total)}</p>
 
             <div className="form-group">
               <label>Payment Mode</label>
@@ -385,20 +390,34 @@ export default function Invoices() {
             </div>
 
             <div className="form-group">
-              <label>Amount Recorded</label>
+              <label>Add New Recorded Amount</label>
               <input
                 type="number"
-                value={paymentData.amountRecorded}
+                value={paymentData.additionalAmount}
                 onChange={(e) => {
-                  const totalAmount = Number(selectedInvoice.total) || 0;
-                  const recorded = Math.min(Math.max(parseFloat(e.target.value) || 0, 0), totalAmount);
+                  const totalAmount = roundAmount(selectedInvoice.total);
+                  const existingRecordedAmount = roundAmount(selectedInvoice.amountRecorded);
+                  const currentBalance = Math.max(totalAmount - existingRecordedAmount, 0);
+                  const additional = Math.min(Math.max(roundAmount(e.target.value), 0), currentBalance);
+                  const newTotalRecorded = Math.min(existingRecordedAmount + additional, totalAmount);
                   setPaymentData({
                     ...paymentData, 
-                    amountRecorded: recorded,
-                    balanceAmount: Math.max(totalAmount - recorded, 0)
+                    additionalAmount: additional,
+                    balanceAmount: Math.max(totalAmount - newTotalRecorded, 0)
                   });
                 }}
                 className="form-input-full"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>New Total Recorded</label>
+              <input
+                type="number"
+                value={Math.min(roundAmount(selectedInvoice.amountRecorded) + roundAmount(paymentData.additionalAmount), roundAmount(selectedInvoice.total))}
+                readOnly
+                className="form-input-full"
+                style={{ backgroundColor: "#f5f5f5" }}
               />
             </div>
 

@@ -8,6 +8,8 @@ import {
   fetchCustomerMetrics
 } from "../services/api";
 
+const roundAmount = (value) => Math.round(Number(value) || 0);
+
 const TabButton = ({ label, isActive, onClick }) => (
   <button
     onClick={onClick}
@@ -106,9 +108,9 @@ export default function Reports() {
         <div>
           {/* Key Metrics */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
-            <StatBox label="Total Revenue" value={`₹${customerMetrics?.totalRevenue || 0}`} />
+            <StatBox label="Total Revenue" value={`₹${roundAmount(customerMetrics?.totalRevenue || 0)}`} />
             <StatBox label="Total Invoices" value={customerMetrics?.totalInvoices || 0} />
-            <StatBox label="Average Order Value" value={`₹${customerMetrics?.averageOrderValue || 0}`} />
+            <StatBox label="Average Order Value" value={`₹${roundAmount(customerMetrics?.averageOrderValue || 0)}`} />
             <StatBox label="Total Customers" value={customerMetrics?.totalCustomers || 0} color="#10b981" />
           </div>
 
@@ -123,7 +125,7 @@ export default function Reports() {
                 <div style={{ fontSize: "24px", fontWeight: "bold", color: "#155724", marginBottom: "0.5rem" }}>
                   {paymentStatus?.paidCount || 0}
                 </div>
-                <div style={{ fontSize: "13px", color: "#155724" }}>₹{paymentStatus?.paidAmount || 0}</div>
+                <div style={{ fontSize: "13px", color: "#155724" }}>₹{roundAmount(paymentStatus?.paidAmount || 0)}</div>
               </div>
 
               <div style={{ backgroundColor: "#fff3cd", padding: "1.5rem", borderRadius: "8px" }}>
@@ -131,14 +133,14 @@ export default function Reports() {
                 <div style={{ fontSize: "24px", fontWeight: "bold", color: "#856404", marginBottom: "0.5rem" }}>
                   {paymentStatus?.balanceCount || 0}
                 </div>
-                <div style={{ fontSize: "13px", color: "#856404" }}>₹{paymentStatus?.pendingAmount || 0}</div>
+                <div style={{ fontSize: "13px", color: "#856404" }}>₹{roundAmount(paymentStatus?.pendingAmount || 0)}</div>
               </div>
 
               <div style={{ backgroundColor: "#f8d7da", padding: "1.5rem", borderRadius: "8px" }}>
                 <div style={{ fontSize: "13px", color: "#721c24", marginBottom: "0.5rem", fontWeight: "500" }}>Collection Rate</div>
                 <div style={{ fontSize: "24px", fontWeight: "bold", color: "#721c24", marginBottom: "0.5rem" }}>
                   {paymentStatus?.totalInvoices > 0 
-                    ? ((paymentStatus.paidCount / paymentStatus.totalInvoices) * 100).toFixed(1) 
+                    ? Math.round((paymentStatus.paidCount / paymentStatus.totalInvoices) * 100)
                     : 0}%
                 </div>
               </div>
@@ -164,7 +166,7 @@ export default function Reports() {
                     <tr key={idx}>
                       <td style={{ border: "1px solid #ccc", padding: "10px" }}>{customer.name}</td>
                       <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>{customer.invoices}</td>
-                      <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "right", fontWeight: "600" }}>₹{customer.revenue}</td>
+                      <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "right", fontWeight: "600" }}>₹{roundAmount(customer.revenue)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -199,7 +201,7 @@ export default function Reports() {
                   <tr key={idx}>
                     <td style={{ border: "1px solid #ccc", padding: "10px" }}>{trend.date}</td>
                     <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "right", fontWeight: "600", color: "#2563eb" }}>
-                      ₹{trend.amount}
+                      ₹{roundAmount(trend.amount)}
                     </td>
                   </tr>
                 ))}
@@ -227,7 +229,7 @@ export default function Reports() {
                     <td style={{ border: "1px solid #ccc", padding: "10px" }}>{customer.name}</td>
                     <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>-</td>
                     <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "right", fontWeight: "600", color: "#2563eb" }}>
-                      ₹{customer.revenue}
+                      ₹{roundAmount(customer.revenue)}
                     </td>
                   </tr>
                 ))}
@@ -253,7 +255,7 @@ export default function Reports() {
                   <tr key={idx}>
                     <td style={{ border: "1px solid #ccc", padding: "10px" }}>{product.name}</td>
                     <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "right", fontWeight: "600", color: "#2563eb" }}>
-                      ₹{product.revenue}
+                      ₹{roundAmount(product.revenue)}
                     </td>
                   </tr>
                 ))}

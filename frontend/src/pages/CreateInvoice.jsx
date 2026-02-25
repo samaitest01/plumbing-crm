@@ -6,6 +6,7 @@ import logo from "../assets/national-traders-logo.svg";
 
 export default function CreateInvoice() {
   const MM_PER_INCH = 25.4;
+  const roundAmount = (value) => Math.round(Number(value) || 0);
 
   const formatInch = (value) => {
     const numeric = Number(value);
@@ -13,10 +14,16 @@ export default function CreateInvoice() {
     return Number(numeric.toFixed(3)).toString();
   };
 
+  const getVariantInchText = (variant) => {
+    if (variant?.size_inch) return String(variant.size_inch);
+    if (variant?.size_label) return String(variant.size_label);
+    const fallback = formatInch(Number(variant?.size_mm) / MM_PER_INCH);
+    return fallback ? `${fallback}"` : "";
+  };
+
   const getVariantDisplayLabel = (variant) => {
-    if (variant?.size_label) return variant.size_label;
-    const inch = formatInch(variant?.size_inch || Number(variant?.size_mm) / MM_PER_INCH);
-    return inch ? `${variant.size_mm} mm / ${inch}"` : `${variant.size_mm} mm`;
+    const inch = getVariantInchText(variant);
+    return inch ? `${variant.size_mm} mm / ${inch}` : `${variant.size_mm} mm`;
   };
 
   const shop = {
@@ -45,8 +52,10 @@ export default function CreateInvoice() {
   const [editId, setEditId] = useState(null);
   const [duplicateHighlightId, setDuplicateHighlightId] = useState(null);
 
-  // 🔑 INVOICE META
+  // Invoice metadata set after successful save.
+  // invoiceNumber is the business-facing number and must match PDF.
   const [invoiceId, setInvoiceId] = useState(null);
+  const [invoiceNumber, setInvoiceNumber] = useState(null);
   const [invoiceDate, setInvoiceDate] = useState(null);
   
   // 💳 MOCKED PAYMENT FIELDS (For Record Keeping Only)
@@ -106,20 +115,17 @@ export default function CreateInvoice() {
     }
   };
 
-  const selectedVariant = variants.find(v => (
-    v.size_label === sizeMM ||
-    String(v.size_mm) === sizeMM
-  ));
+  const selectedVariant = variants.find(v => String(v.size_mm) === sizeMM);
 
   const price = selectedVariant?.price || 0;
 
   const handleAddOrUpdate = () => {
     if (!productId || !sizeMM || !qty) return;
 
-    const selectedSizeLabel = (selectedVariant?.size_label || String(sizeMM || "")).trim().toLowerCase();
+    const selectedSizeLabel = String(selectedVariant?.size_inch || selectedVariant?.size_label || selectedVariant?.size_mm || sizeMM || "").trim().toLowerCase();
     const duplicateItem = items.find(i => {
       if (editId && i.id === editId) return false;
-      const existingSizeLabel = (i.sizeLabel || String(i.sizeMM || "")).trim().toLowerCase();
+      const existingSizeLabel = (i.sizeInch || i.sizeLabel || String(i.sizeMM || "")).trim().toLowerCase();
       return i.productId === productId && existingSizeLabel === selectedSizeLabel;
     });
 
@@ -139,6 +145,7 @@ export default function CreateInvoice() {
       productId,
       productName,
       sizeMM: selectedVariant?.size_mm ?? (Number(sizeMM) || 0),
+      sizeInch: selectedVariant?.size_inch || selectedVariant?.size_label || undefined,
       sizeLabel: selectedVariant?.size_label || undefined,
       qty: Number(qty),
       price,
@@ -169,7 +176,7 @@ export default function CreateInvoice() {
     setProductId(i.productId);
     setProductName(i.productName);
     setProductSearch(i.productName);
-    setSizeMM(i.sizeLabel || String(i.sizeMM));
+    setSizeMM(String(i.sizeMM));
     setQty(i.qty);
     setLineDiscount(i.discount);
 
@@ -213,7 +220,9 @@ export default function CreateInvoice() {
 
   const totalPrice = items.reduce((s, i) => s + i.baseAmount, 0);
   const totalAmount = items.reduce((s, i) => s + i.amount, 0);
-  const totalDiscount = totalPrice - totalAmount;
+  const roundedTotalPrice = roundAmount(totalPrice);
+  const roundedTotalAmount = roundAmount(totalAmount);
+  const totalDiscount = roundedTotalPrice - roundedTotalAmount;
 
   const handleSave = async () => {
     if (customerMobile.length !== 10) {
@@ -242,17 +251,17 @@ export default function CreateInvoice() {
         console.log("✅ Customer already exists");
       }
 
-      // Save invoice
-      const recordedAmount = Math.min(Math.max(Number(amountRecorded) || 0, 0), totalAmount);
-      const balanceAmount = Math.max(totalAmount - recordedAmount, 0);
+      // Save invoice and rely on backend for final business invoice number generation.
+      const recordedAmount = Math.min(Math.max(roundAmount(amountRecorded), 0), roundedTotalAmount);
+      const balanceAmount = Math.max(roundedTotalAmount - recordedAmount, 0);
       const calculatedPaymentStatus = balanceAmount === 0 ? "Recorded" : "Pending";
 
       const res = await saveInvoice({
         customerName,
         customerMobile,
         items,
-        subTotal: totalPrice,
-        total: totalAmount,
+        subTotal: roundedTotalPrice,
+        total: roundedTotalAmount,
         paymentStatus: calculatedPaymentStatus,
         paymentMode,
         amountRecorded: recordedAmount,
@@ -261,6 +270,7 @@ export default function CreateInvoice() {
 
       resetInvoiceItems();
       setInvoiceId(res.data._id);
+      setInvoiceNumber(res.data.invoiceNumber || null);
       setInvoiceDate(res.data.createdAt);
       alert("Invoice saved successfully");
       console.log("✅ Invoice saved:", res.data);
@@ -270,13 +280,58 @@ export default function CreateInvoice() {
     }
   };
 
-  const handlePrint = () => {
-    const previousHandler = window.onafterprint;
-    window.onafterprint = () => {
-      resetInvoiceItems();
-      window.onafterprint = previousHandler;
-    };
-    window.print();
+  const handlePrint = async () => {
+    // Print flow is PDF-first so printed output exactly matches generated invoice PDF.
+    if (!invoiceId) {
+      alert("Please save invoice first, then print the PDF version.");
+      return;
+    }
+
+    const pdfUrl = `${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"}/api/invoices/${invoiceId}/pdf`;
+
+    try {
+      const response = await fetch(pdfUrl);
+      if (!response.ok) {
+        throw new Error("Failed to load invoice PDF");
+      }
+
+      const pdfBlob = await response.blob();
+      const blobUrl = URL.createObjectURL(pdfBlob);
+
+      const printFrame = document.createElement("iframe");
+      printFrame.style.position = "fixed";
+      printFrame.style.right = "0";
+      printFrame.style.bottom = "0";
+      printFrame.style.width = "0";
+      printFrame.style.height = "0";
+      printFrame.style.border = "0";
+      printFrame.src = blobUrl;
+
+      const cleanup = () => {
+        setTimeout(() => {
+          URL.revokeObjectURL(blobUrl);
+          if (printFrame.parentNode) {
+            printFrame.parentNode.removeChild(printFrame);
+          }
+        }, 1500);
+      };
+
+      printFrame.onload = () => {
+        const frameWindow = printFrame.contentWindow;
+        if (!frameWindow) {
+          cleanup();
+          return;
+        }
+        frameWindow.focus();
+        frameWindow.print();
+        cleanup();
+      };
+
+      document.body.appendChild(printFrame);
+    } catch (err) {
+      console.error("❌ Print PDF error:", err);
+      alert("Failed to print invoice PDF. Please try the PDF button.");
+    }
   };
   return (
     <PageWrapper>
@@ -301,7 +356,7 @@ export default function CreateInvoice() {
       <div className="flex-row-between">
         <div>
           <b>Invoice No:</b>{" "}
-          {invoiceId ? invoiceId.slice(-6) : "-"}
+          {invoiceNumber || "-"}
         </div>
         <div>
           <b>Date:</b>{" "}
@@ -401,7 +456,7 @@ export default function CreateInvoice() {
           <select value={sizeMM} onChange={e => setSizeMM(e.target.value)} className="form-select" style={{ width: "100%" }}>
             <option value="">Size</option>
             {variants.map(v =>
-              <option key={`${v.size_mm}-${v.size_label || ""}`} value={v.size_label || String(v.size_mm)}>
+              <option key={`${v.size_mm}-${v.size_inch || v.size_label || ""}`} value={String(v.size_mm)}>
                 {getVariantDisplayLabel(v)}
               </option>
             )}
@@ -462,12 +517,12 @@ export default function CreateInvoice() {
                   <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>{index + 1}</td>
                   <td style={{ border: "1px solid #ccc", padding: "10px" }}>{i.productName}</td>
                   <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>
-                    {i.sizeLabel || `${i.sizeMM} mm / ${formatInch(Number(i.sizeMM) / MM_PER_INCH)}"`}
+                    {`${i.sizeMM} mm / ${i.sizeInch || i.sizeLabel || `${formatInch(Number(i.sizeMM) / MM_PER_INCH)}"`}`}
                   </td>
                   <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>{i.qty}</td>
-                  <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "right" }}>₹{i.price.toFixed(2)}</td>
+                  <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "right" }}>₹{Number(i.price || 0).toFixed(2)}</td>
                   <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>{i.discount}%</td>
-                  <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "right", fontWeight: "600" }}>₹{i.amount.toFixed(2)}</td>
+                  <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "right", fontWeight: "600" }}>₹{Number(i.amount || 0).toFixed(2)}</td>
                   <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>
                     <button onClick={() => handleEdit(i)} style={{ padding: "4px 8px", marginRight: "4px" }}>✏️</button>
                     <button onClick={() => handleDelete(i.id)} style={{ padding: "4px 8px" }}>❌</button>
@@ -489,11 +544,11 @@ export default function CreateInvoice() {
         <div style={{ width: "100%", maxWidth: "400px", textAlign: "right" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "14px" }}>
             <span>Total Price (Gross):</span>
-            <span style={{ fontWeight: "600" }}>₹{totalPrice.toFixed(2)}</span>
+            <span style={{ fontWeight: "600" }}>₹{roundedTotalPrice}</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "14px" }}>
             <span>Total Discount:</span>
-            <span style={{ fontWeight: "600" }}>₹{totalDiscount.toFixed(2)}</span>
+            <span style={{ fontWeight: "600" }}>₹{roundAmount(totalDiscount)}</span>
           </div>
           <div style={{ 
             display: "flex",
@@ -505,7 +560,7 @@ export default function CreateInvoice() {
             borderTop: "2px solid #333"
           }}>
             <span>Final Amount (Taxable):</span>
-            <span style={{ color: "#2563eb" }}>₹{totalAmount.toFixed(2)}</span>
+            <span style={{ color: "#2563eb" }}>₹{roundedTotalAmount}</span>
           </div>
         </div>
       </div>
@@ -525,7 +580,7 @@ export default function CreateInvoice() {
           <select value={paymentStatus} onChange={e => {
             setPaymentStatus(e.target.value);
             if (e.target.value === "Recorded") {
-              setAmountRecorded(totalAmount);
+              setAmountRecorded(roundedTotalAmount);
             } else {
               setAmountRecorded(0);
             }
@@ -556,7 +611,7 @@ export default function CreateInvoice() {
             onChange={e => setAmountRecorded(Number(e.target.value))}
             placeholder="0"
             min="0"
-            max={totalAmount}
+            max={roundedTotalAmount}
             className="form-input"
             style={{ width: "100%" }}
           />
@@ -568,7 +623,7 @@ export default function CreateInvoice() {
           </label>
           <input 
             type="number" 
-            value={(totalAmount - (Number(amountRecorded) || 0)).toFixed(2)}
+            value={Math.max(roundedTotalAmount - roundAmount(amountRecorded), 0)}
             disabled
             className="form-input"
             style={{ width: "100%", backgroundColor: "#f5f5f5", cursor: "not-allowed" }}
@@ -589,7 +644,9 @@ export default function CreateInvoice() {
             <button>PDF</button>
           </a>
         )}
-        <button onClick={handlePrint}>Print</button>
+        <button onClick={handlePrint} disabled={!invoiceId} title={!invoiceId ? "Save invoice first" : "Print invoice PDF"}>
+          Print
+        </button>
       </div>
 
     </PageWrapper>

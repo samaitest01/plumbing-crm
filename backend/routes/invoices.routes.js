@@ -6,6 +6,8 @@ const fs = require("fs");
 const path = require("path");
 const SVGtoPDF = require("svg-to-pdfkit");
 
+const roundAmount = (value) => Math.round(Number(value) || 0);
+
 let cachedLogoSvg = null;
 const logoCandidates = [
   path.join(__dirname, "../assets/national-traders-logo.svg"),
@@ -41,13 +43,16 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ message: "Subtotal and total are required" });
     }
 
-    const totalAmount = Number(total) || 0;
-    const recordedAmount = Math.min(Math.max(Number(req.body.amountRecorded) || 0, 0), totalAmount);
+    const subTotalAmount = roundAmount(subTotal);
+    const totalAmount = roundAmount(total);
+    const recordedAmount = Math.min(Math.max(roundAmount(req.body.amountRecorded), 0), totalAmount);
     const balanceAmount = Math.max(totalAmount - recordedAmount, 0);
     const calculatedPaymentStatus = balanceAmount === 0 ? "Recorded" : "Pending";
 
     const invoice = await Invoice.create({
       ...req.body,
+      subTotal: subTotalAmount,
+      total: totalAmount,
       paymentStatus: calculatedPaymentStatus,
       amountRecorded: recordedAmount,
       balanceAmount
@@ -107,10 +112,10 @@ router.patch("/:id/payment", async (req, res) => {
     // Update payment fields with normalized status from amount/balance
     if (paymentMode !== undefined) invoice.paymentMode = paymentMode;
 
-    const totalAmount = Number(invoice.total) || 0;
+    const totalAmount = roundAmount(invoice.total);
     const incomingRecorded = amountRecorded !== undefined
-      ? Number(amountRecorded) || 0
-      : Number(invoice.amountRecorded) || 0;
+      ? roundAmount(amountRecorded)
+      : roundAmount(invoice.amountRecorded);
     const normalizedRecorded = Math.min(Math.max(incomingRecorded, 0), totalAmount);
     const normalizedBalance = Math.max(totalAmount - normalizedRecorded, 0);
 
@@ -135,6 +140,7 @@ router.get("/:id/pdf", async (req, res) => {
     if (!invoice) return res.status(404).send("Invoice not found");
 
     const safe = (n) => (typeof n === "number" ? n : 0);
+    const formatAmount = (n) => roundAmount(safe(n)).toString();
     const paymentStatusLabel = invoice.paymentStatus === "Recorded" ? "Paid" : "Partial";
 
     const doc = new PDFDocument({ margin: 30, size: 'A4' });
@@ -248,7 +254,7 @@ router.get("/:id/pdf", async (req, res) => {
     invoice.items.forEach((item, idx) => {
       const baseAmount = safe(item.baseAmount);
       const finalAmount = safe(item.amount);
-      const sizeLabel = item.sizeLabel || `${item.sizeMM}mm`;
+      const sizeLabel = item.sizeLabel || item.sizeInch || `${item.sizeMM}mm`;
       
       if (currentY + rowHeight > pageBottom) {
         doc.addPage();
@@ -309,7 +315,7 @@ router.get("/:id/pdf", async (req, res) => {
     doc.rect(leftMargin, currentY, summaryBoxWidth, summaryRowHeight).fillAndStroke();
     doc.fontSize(8).font("Helvetica").fillColor("#000");
     doc.text("Subtotal (Gross):", leftMargin + 5, currentY + 2);
-    doc.text(`Rs. ${safe(invoice.subTotal).toFixed(2)}`, leftMargin + 5, currentY + 2, { width: summaryBoxWidth - 10, align: "right" });
+    doc.text(`Rs. ${formatAmount(invoice.subTotal)}`, leftMargin + 5, currentY + 2, { width: summaryBoxWidth - 10, align: "right" });
     
     currentY += summaryRowHeight;
     
@@ -318,7 +324,7 @@ router.get("/:id/pdf", async (req, res) => {
     doc.rect(leftMargin, currentY, summaryBoxWidth, summaryRowHeight).fillAndStroke();
     doc.fontSize(8).font("Helvetica").fillColor("#000");
     doc.text("Total Discount:", leftMargin + 5, currentY + 2);
-    doc.text(`Rs. ${(safe(invoice.subTotal) - safe(invoice.total)).toFixed(2)}`, leftMargin + 5, currentY + 2, { width: summaryBoxWidth - 10, align: "right" });
+    doc.text(`Rs. ${formatAmount(safe(invoice.subTotal) - safe(invoice.total))}`, leftMargin + 5, currentY + 2, { width: summaryBoxWidth - 10, align: "right" });
     
     currentY += summaryRowHeight;
     
@@ -327,7 +333,7 @@ router.get("/:id/pdf", async (req, res) => {
     doc.rect(leftMargin, currentY, summaryBoxWidth, summaryRowHeight + 2).fillAndStroke();
     doc.fontSize(9).font("Helvetica-Bold").fillColor("#000");
     doc.text("TOTAL AMOUNT:", leftMargin + 5, currentY + 2);
-    doc.text(`Rs. ${safe(invoice.total).toFixed(2)}`, leftMargin + 5, currentY + 2, { width: summaryBoxWidth - 10, align: "right" });
+    doc.text(`Rs. ${formatAmount(invoice.total)}`, leftMargin + 5, currentY + 2, { width: summaryBoxWidth - 10, align: "right" });
     
     currentY += summaryRowHeight + 2;
     
@@ -351,11 +357,11 @@ router.get("/:id/pdf", async (req, res) => {
     const paymentCol2 = leftMargin + summaryBoxWidth / 2;
     
     doc.text(`Status: ${paymentStatusLabel}`, paymentCol1, currentY);
-    doc.text(`Amount Paid: Rs. ${safe(invoice.amountRecorded).toFixed(2)}`, paymentCol2, currentY);
+    doc.text(`Amount Paid: Rs. ${formatAmount(invoice.amountRecorded)}`, paymentCol2, currentY);
     
     currentY += 15;
     doc.text(`Payment Mode: ${invoice.paymentMode || "N/A"}`, paymentCol1, currentY);
-    doc.text(`Balance Due: Rs. ${safe(invoice.balanceAmount).toFixed(2)}`, paymentCol2, currentY);
+    doc.text(`Balance Due: Rs. ${formatAmount(invoice.balanceAmount)}`, paymentCol2, currentY);
 
     // Footer
     currentY += 30;

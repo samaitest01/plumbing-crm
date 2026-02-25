@@ -8,6 +8,7 @@ require("dotenv").config();
 
 const app = express();
 
+// Global middleware stack (request parsing, CORS, static content)
 // CORS Configuration
 const corsOptions = {
   origin: process.env.FRONTEND_URL || "http://localhost:5173",
@@ -31,6 +32,7 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// Route mounting (all API routes live under /api/*)
 // API Routes
 app.use("/api/auth", require("./routes/auth.routes"));
 app.use("/api/customers", require("./routes/customers.routes"));
@@ -43,6 +45,7 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"));
 });
 
+// Centralized error formatter to keep API responses consistent.
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error("❌ Error:", err);
@@ -52,6 +55,7 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Explicit 404 response for unmatched API/browser routes.
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });

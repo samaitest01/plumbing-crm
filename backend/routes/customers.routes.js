@@ -3,6 +3,8 @@ const router = express.Router();
 const Customer = require("../models/Customer");
 const Invoice = require("../models/Invoice");
 
+const roundAmount = (value) => Math.round(Number(value) || 0);
+
 router.get("/", async (req, res) => {
   try {
     const customers = await Customer.find().sort({ name: 1 });
@@ -43,9 +45,9 @@ router.get("/:mobile", async (req, res) => {
       invoices,
       stats: {
         totalInvoices,
-        totalBilled: totalBilled.toFixed(2),
-        totalPaid: totalPaid.toFixed(2),
-        totalBalance: totalBalance.toFixed(2)
+        totalBilled: roundAmount(totalBilled),
+        totalPaid: roundAmount(totalPaid),
+        totalBalance: roundAmount(totalBalance)
       }
     });
   } catch (err) {

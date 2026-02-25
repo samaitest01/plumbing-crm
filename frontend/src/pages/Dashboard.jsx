@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import PageWrapper from "../components/PageWrapper";
 
 const getVariantKey = (productId, sizeMM) => `${productId}__${Number(sizeMM).toFixed(2)}`;
+const roundAmount = (value) => Math.round(Number(value) || 0);
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -75,7 +76,7 @@ export default function Dashboard() {
               lowStock.push({
                 key: `${product.id}-${variant.size_mm}`,
                 productName: product.name,
-                sizeLabel: variant.size_label || `${variant.size_mm} mm`,
+                sizeLabel: `${variant.size_mm} mm / ${variant.size_inch || variant.size_label || "-"}`,
                 stockQty,
                 soldQty,
                 availableQty,
@@ -90,10 +91,10 @@ export default function Dashboard() {
       const recent = invoices.slice(0, 5);
 
       setStats({
-        todaySales: todaySales.toFixed(2),
+        todaySales: roundAmount(todaySales),
         todayInvoices: todayInvoices.length,
         totalCustomers: customers.length,
-        pendingBalance: pendingBalance.toFixed(2),
+        pendingBalance: roundAmount(pendingBalance),
         lowStockItems: lowStock.length
       });
 
@@ -275,7 +276,7 @@ export default function Dashboard() {
                       {new Date(inv.createdAt).toLocaleDateString()}
                     </td>
                     <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "right", fontWeight: "600" }}>
-                      ₹{parseFloat(inv.total || 0).toFixed(2)}
+                      ₹{roundAmount(inv.total || 0)}
                     </td>
                     <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>
                       <span style={{

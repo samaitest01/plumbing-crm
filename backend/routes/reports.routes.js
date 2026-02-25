@@ -4,6 +4,8 @@ const Invoice = require("../models/Invoice");
 const Customer = require("../models/Customer");
 const { protect, allowRoles } = require("./auth.middleware");
 
+const roundAmount = (value) => Math.round(Number(value) || 0);
+
 // GET SALES TRENDS (Daily/Monthly)
 router.get("/sales-trends", protect, allowRoles("ADMIN"), async (req, res) => {
   try {
@@ -31,7 +33,7 @@ router.get("/sales-trends", protect, allowRoles("ADMIN"), async (req, res) => {
 
     const data = Object.entries(trends).map(([date, amount]) => ({
       date,
-      amount: parseFloat(amount.toFixed(2))
+      amount: roundAmount(amount)
     }));
 
     res.json(data);
@@ -55,7 +57,7 @@ router.get("/revenue-by-customer", protect, allowRoles("ADMIN"), async (req, res
     const data = Object.entries(revenueMap)
       .map(([name, revenue]) => ({
         name,
-        revenue: parseFloat(revenue.toFixed(2))
+        revenue: roundAmount(revenue)
       }))
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 10); // Top 10 customers
@@ -83,7 +85,7 @@ router.get("/revenue-by-product", protect, allowRoles("ADMIN"), async (req, res)
     const data = Object.entries(productMap)
       .map(([name, revenue]) => ({
         name,
-        revenue: parseFloat(revenue.toFixed(2))
+        revenue: roundAmount(revenue)
       }))
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 10);
@@ -120,8 +122,8 @@ router.get("/payment-status", protect, allowRoles("ADMIN"), async (req, res) => 
 
     res.json({
       ...summary,
-      recordedAmount: parseFloat(summary.recordedAmount.toFixed(2)),
-      pendingAmount: parseFloat(summary.pendingAmount.toFixed(2)),
+      recordedAmount: roundAmount(summary.recordedAmount),
+      pendingAmount: roundAmount(summary.pendingAmount),
       note: "Mock payment tracking - no actual payment processing"
     });
   } catch (err) {
@@ -169,11 +171,11 @@ router.get("/customer-metrics", protect, allowRoles("ADMIN"), async (req, res) =
       .slice(0, 5)
       .map(c => ({
         ...c,
-        revenue: parseFloat(c.revenue.toFixed(2))
+        revenue: roundAmount(c.revenue)
       }));
 
-    metrics.totalRevenue = parseFloat(metrics.totalRevenue.toFixed(2));
-    metrics.averageOrderValue = parseFloat(metrics.averageOrderValue.toFixed(2));
+    metrics.totalRevenue = roundAmount(metrics.totalRevenue);
+    metrics.averageOrderValue = roundAmount(metrics.averageOrderValue);
 
     res.json(metrics);
   } catch (err) {

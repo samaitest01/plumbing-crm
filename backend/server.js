@@ -1,3 +1,5 @@
+// Entry point for backend runtime.
+// Loads environment/config, initializes DB connection, and starts Express app.
 require("dotenv").config();
 require("./db");
 

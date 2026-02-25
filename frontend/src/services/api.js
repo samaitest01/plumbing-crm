@@ -1,12 +1,14 @@
 import axios from "axios";
 
+// Base URL points to backend; can be overridden per environment.
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
+// Shared axios instance for all API calls.
 const API = axios.create({
   baseURL: `${API_BASE_URL}/api`
 });
 
-// Add token to requests if available
+// Attach auth token automatically when user is logged in.
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -17,7 +19,8 @@ API.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
-// Handle response errors
+// Centralized auth failure handling.
+// On 401, clear local auth state and send user to login.
 API.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -40,6 +43,8 @@ export const fetchAllProducts = () => API.get("/products");
 export const createProduct = (data) => API.post("/products", data);
 export const updateProduct = (system, productId, data) => API.put(`/products/${system}/${productId}`, data);
 export const deleteProduct = (system, productId) => API.delete(`/products/${system}/${productId}`);
+export const updateProductVariantStockQty = (system, productId, sizeMM, stockQty) =>
+  API.patch(`/products/${system}/${productId}/variants/${sizeMM}/stock`, { stock_qty: stockQty });
 
 // Invoice APIs
 export const saveInvoice = (data) => API.post("/invoices", data);

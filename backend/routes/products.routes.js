@@ -9,22 +9,108 @@ const MM_PER_INCH = 25.4;
 
 const roundTo = (value, decimals) => Number(value.toFixed(decimals));
 
+// Greatest common divisor used to simplify inch fractions (e.g. 8/16 -> 1/2).
+const gcd = (a, b) => {
+  let x = Math.abs(a);
+  let y = Math.abs(b);
+  while (y) {
+    const temp = y;
+    y = x % y;
+    x = temp;
+  }
+  return x || 1;
+};
+
+// Converts decimal inch values into readable plumbing fractions (up to 1/16 precision).
+const formatInchFraction = (value) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) return "";
+
+  const whole = Math.floor(numeric);
+  const fractional = numeric - whole;
+  const denominator = 16;
+  const numeratorRaw = Math.round(fractional * denominator);
+
+  if (numeratorRaw === 0) {
+    return whole ? String(whole) : "0";
+  }
+
+  if (numeratorRaw === denominator) {
+    return String(whole + 1);
+  }
+
+  const divisor = gcd(numeratorRaw, denominator);
+  const numerator = numeratorRaw / divisor;
+  const reducedDenominator = denominator / divisor;
+
+  if (!whole) {
+    return `${numerator}/${reducedDenominator}`;
+  }
+
+  return `${whole}-${numerator}/${reducedDenominator}`;
+};
+
+// Accepts inch input in decimal, fraction, or mixed-fraction format.
+// Examples: 0.5, 1/2, 1-1/4
+const parseInchInput = (value) => {
+  if (value === undefined || value === null) return null;
+  const raw = String(value).trim();
+  if (!raw) return null;
+
+  const numeric = Number(raw);
+  if (Number.isFinite(numeric) && numeric > 0) {
+    return numeric;
+  }
+
+  const normalized = raw.replace(/\s+/g, "");
+  const mixedMatch = normalized.match(/^(\d+)-(\d+)\/(\d+)$/);
+  if (mixedMatch) {
+    const whole = Number(mixedMatch[1]);
+    const num = Number(mixedMatch[2]);
+    const den = Number(mixedMatch[3]);
+    if (Number.isFinite(whole) && Number.isFinite(num) && Number.isFinite(den) && den > 0 && num > 0) {
+      return whole + num / den;
+    }
+  }
+
+  const fracMatch = normalized.match(/^(\d+)\/(\d+)$/);
+  if (fracMatch) {
+    const num = Number(fracMatch[1]);
+    const den = Number(fracMatch[2]);
+    if (Number.isFinite(num) && Number.isFinite(den) && den > 0 && num > 0) {
+      return num / den;
+    }
+  }
+
+  return null;
+};
+
+// Normalized string format used for storage and display consistency.
+const normalizeInchValue = (value) => {
+  const parsed = parseInchInput(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return "";
+  return formatInchFraction(parsed);
+};
+
+// Ensures every variant saved to products.json has validated, consistent fields.
 const normalizeVariant = (variant) => {
   const sizeMMInput = Number(variant.size_mm);
-  const sizeInchInput = Number(variant.size_inch);
+  const sizeInchInput = parseInchInput(variant.size_inch);
+  const legacyLabelInchInput = parseInchInput(variant.size_label);
+  const inchInput = Number.isFinite(sizeInchInput) ? sizeInchInput : legacyLabelInchInput;
   const price = Number(variant.price);
   const stockQtyInput = Number(variant.stock_qty);
   const reorderLevelInput = Number(variant.reorder_level);
 
   const hasSizeMM = Number.isFinite(sizeMMInput) && sizeMMInput > 0;
-  const hasSizeInch = Number.isFinite(sizeInchInput) && sizeInchInput > 0;
+  const hasSizeInch = Number.isFinite(inchInput) && inchInput > 0;
 
   if ((!hasSizeMM && !hasSizeInch) || !Number.isFinite(price)) {
     throw new Error("Invalid variant size or price");
   }
 
-  const sizeMM = hasSizeMM ? sizeMMInput : roundTo(sizeInchInput * MM_PER_INCH, 2);
-  const sizeInch = hasSizeInch ? sizeInchInput : roundTo(sizeMM / MM_PER_INCH, 3);
+  const sizeMM = hasSizeMM ? sizeMMInput : roundTo(inchInput * MM_PER_INCH, 2);
+  const sizeInch = hasSizeInch ? formatInchFraction(inchInput) : formatInchFraction(sizeMM / MM_PER_INCH);
 
   const entry = {
     size_mm: sizeMM,
@@ -34,13 +120,15 @@ const normalizeVariant = (variant) => {
     reorder_level: Number.isFinite(reorderLevelInput) && reorderLevelInput >= 0 ? reorderLevelInput : 0
   };
 
-  if (variant.size_label) {
-    entry.size_label = String(variant.size_label);
+  const normalizedLegacyLabel = normalizeInchValue(variant.size_label);
+  if (normalizedLegacyLabel) {
+    entry.size_label = normalizedLegacyLabel;
   }
 
   return entry;
 };
 
+// File-backed storage helpers (this project uses JSON file catalog, not Mongo for products).
 const loadProducts = () => {
   const raw = fs.readFileSync(productsFilePath, "utf8");
   return JSON.parse(raw);
@@ -232,6 +320,53 @@ router.delete("/:system/:productId", (req, res) => {
   } catch (err) {
     console.error("Failed to delete product", err);
     res.status(500).json({ message: err.message || "Failed to delete product" });
+  }
+});
+
+// UPDATE stock quantity for one variant
+router.patch("/:system/:productId/variants/:sizeMM/stock", (req, res) => {
+  try {
+    const systemKey = req.params.system.toUpperCase();
+    const productId = req.params.productId;
+    const sizeMM = Number(req.params.sizeMM);
+    const stockQty = Number(req.body?.stock_qty);
+
+    if (!Number.isFinite(sizeMM) || sizeMM <= 0) {
+      return res.status(400).json({ message: "Valid sizeMM is required" });
+    }
+
+    if (!Number.isFinite(stockQty) || stockQty < 0) {
+      return res.status(400).json({ message: "Valid stock_qty (0 or greater) is required" });
+    }
+
+    const products = loadProducts();
+    const targetSystem = products.find((entry) => entry.system === systemKey);
+    if (!targetSystem) {
+      return res.status(404).json({ message: "System not found" });
+    }
+
+    const targetProduct = (targetSystem.products || []).find((entry) => entry.id === productId);
+    if (!targetProduct) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    const targetVariant = (targetProduct.variants || []).find((variant) => Number(variant.size_mm) === sizeMM);
+    if (!targetVariant) {
+      return res.status(404).json({ message: "Variant not found" });
+    }
+
+    targetVariant.stock_qty = stockQty;
+    writeProducts(products);
+
+    res.json({
+      message: "Variant stock quantity updated",
+      productId,
+      size_mm: sizeMM,
+      stock_qty: stockQty
+    });
+  } catch (err) {
+    console.error("Failed to update variant stock quantity", err);
+    res.status(500).json({ message: "Failed to update variant stock quantity" });
   }
 });
 

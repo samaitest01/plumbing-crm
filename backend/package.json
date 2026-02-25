@@ -4,8 +4,8 @@
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node scripts/start-safe.js",
+    "dev": "node scripts/start-safe.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
