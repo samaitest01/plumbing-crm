@@ -1,0 +1,187 @@
+const express = require("express");
+const router = express.Router();
+const Invoice = require("../models/Invoice");
+const Customer = require("../models/Customer");
+const { protect, allowRoles } = require("./auth.middleware");
+
+const roundAmount = (value) => Math.round(Number(value) || 0);
+
+// GET SALES TRENDS (Daily/Monthly)
+router.get("/sales-trends", protect, allowRoles("ADMIN"), async (req, res) => {
+  try {
+    const { period } = req.query; // daily, weekly, monthly
+    const invoices = await Invoice.find().sort({ createdAt: -1 });
+
+    let trends = {};
+
+    invoices.forEach(inv => {
+      let key;
+      const date = new Date(inv.createdAt);
+
+      if (period === "weekly") {
+        const weekStart = new Date(date);
+        weekStart.setDate(date.getDate() - date.getDay());
+        key = weekStart.toISOString().split("T")[0];
+      } else if (period === "monthly") {
+        key = date.toISOString().slice(0, 7); // YYYY-MM
+      } else {
+        key = date.toISOString().split("T")[0]; // YYYY-MM-DD
+      }
+
+      trends[key] = (trends[key] || 0) + (inv.total || 0);
+    });
+
+    const data = Object.entries(trends).map(([date, amount]) => ({
+      date,
+      amount: roundAmount(amount)
+    }));
+
+    res.json(data);
+  } catch (err) {
+    console.error("Sales trends error:", err);
+    res.status(500).json({ message: "Failed to fetch sales trends" });
+  }
+});
+
+// GET REVENUE BY CUSTOMER
+router.get("/revenue-by-customer", protect, allowRoles("ADMIN"), async (req, res) => {
+  try {
+    const invoices = await Invoice.find();
+    const revenueMap = {};
+
+    invoices.forEach(inv => {
+      const customer = inv.customerName;
+      revenueMap[customer] = (revenueMap[customer] || 0) + (inv.total || 0);
+    });
+
+    const data = Object.entries(revenueMap)
+      .map(([name, revenue]) => ({
+        name,
+        revenue: roundAmount(revenue)
+      }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 10); // Top 10 customers
+
+    res.json(data);
+  } catch (err) {
+    console.error("Revenue by customer error:", err);
+    res.status(500).json({ message: "Failed to fetch revenue data" });
+  }
+});
+
+// GET REVENUE BY PRODUCT
+router.get("/revenue-by-product", protect, allowRoles("ADMIN"), async (req, res) => {
+  try {
+    const invoices = await Invoice.find();
+    const productMap = {};
+
+    invoices.forEach(inv => {
+      inv.items.forEach(item => {
+        const key = `${item.productName} (${item.sizeMM}mm)`;
+        productMap[key] = (productMap[key] || 0) + (item.amount || 0);
+      });
+    });
+
+    const data = Object.entries(productMap)
+      .map(([name, revenue]) => ({
+        name,
+        revenue: roundAmount(revenue)
+      }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 10);
+
+    res.json(data);
+  } catch (err) {
+    console.error("Revenue by product error:", err);
+    res.status(500).json({ message: "Failed to fetch product revenue" });
+  }
+});
+
+// GET PAYMENT STATUS SUMMARY
+router.get("/payment-status", protect, allowRoles("ADMIN"), async (req, res) => {
+  try {
+    const invoices = await Invoice.find();
+
+    const summary = {
+      totalInvoices: invoices.length,
+      recordedCount: 0,
+      pendingCount: 0,
+      recordedAmount: 0,
+      pendingAmount: 0
+    };
+
+    invoices.forEach(inv => {
+      if (inv.paymentStatus === "Recorded") {
+        summary.recordedCount++;
+        summary.recordedAmount += inv.total || 0;
+      } else {
+        summary.pendingCount++;
+        summary.pendingAmount += (inv.total - (inv.amountRecorded || 0)) || 0;
+      }
+    });
+
+    res.json({
+      ...summary,
+      recordedAmount: roundAmount(summary.recordedAmount),
+      pendingAmount: roundAmount(summary.pendingAmount),
+      note: "Mock payment tracking - no actual payment processing"
+    });
+  } catch (err) {
+    console.error("Payment status error:", err);
+    res.status(500).json({ message: "Failed to fetch payment status" });
+  }
+});
+
+// GET CUSTOMER METRICS
+router.get("/customer-metrics", protect, allowRoles("ADMIN"), async (req, res) => {
+  try {
+    const invoices = await Invoice.find();
+    const customers = await Customer.find();
+
+    const metrics = {
+      totalCustomers: customers.length,
+      totalInvoices: invoices.length,
+      totalRevenue: 0,
+      averageOrderValue: 0,
+      topCustomers: []
+    };
+
+    const customerMap = {};
+
+    invoices.forEach(inv => {
+      metrics.totalRevenue += inv.total || 0;
+      const mobile = inv.customerMobile;
+      if (!customerMap[mobile]) {
+        customerMap[mobile] = {
+          name: inv.customerName,
+          invoices: 0,
+          revenue: 0
+        };
+      }
+      customerMap[mobile].invoices++;
+      customerMap[mobile].revenue += inv.total || 0;
+    });
+
+    metrics.averageOrderValue = metrics.totalInvoices > 0 
+      ? metrics.totalRevenue / metrics.totalInvoices 
+      : 0;
+
+    metrics.topCustomers = Object.values(customerMap)
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5)
+      .map(c => ({
+        ...c,
+        revenue: roundAmount(c.revenue)
+      }));
+
+    metrics.totalRevenue = roundAmount(metrics.totalRevenue);
+    metrics.averageOrderValue = roundAmount(metrics.averageOrderValue);
+
+    res.json(metrics);
+  } catch (err) {
+    console.error("Customer metrics error:", err);
+    res.status(500).json({ message: "Failed to fetch customer metrics" });
+  }
+});
+
+module.exports = router;

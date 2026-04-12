@@ -1,0 +1,33 @@
+<svg width="640" height="720" viewBox="0 0 640 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ntGrad" x1="120" y1="120" x2="520" y2="520" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <linearGradient id="ringGrad" x1="80" y1="80" x2="560" y2="560" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F172A"/>
+      <stop offset="1" stop-color="#334155"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Outer mark -->
+  <circle cx="320" cy="320" r="238" fill="white"/>
+  <circle cx="320" cy="320" r="238" stroke="url(#ringGrad)" stroke-width="24"/>
+
+  <!-- Pipe + water drop motif -->
+  <path d="M180 402C180 356 217 319 263 319H282" stroke="#0F172A" stroke-width="22" stroke-linecap="round"/>
+  <circle cx="263" cy="319" r="14" fill="#0F172A"/>
+  <path d="M458 240C458 286 421 323 375 323H356" stroke="#0F172A" stroke-width="22" stroke-linecap="round"/>
+  <circle cx="375" cy="323" r="14" fill="#0F172A"/>
+
+  <path d="M321 170C360 220 377 247 377 275C377 307 351 333 320 333C289 333 263 307 263 275C263 247 281 220 321 170Z" fill="#38BDF8"/>
+
+  <!-- NT monogram -->
+  <path d="M214 437V213H249L382 374V213H426V437H391L258 276V437H214Z" fill="url(#ntGrad)"/>
+  <rect x="278" y="279" width="188" height="44" rx="10" fill="#0F172A"/>
+
+  <!-- Brand text -->
+  <text x="320" y="640" text-anchor="middle" fill="#0F172A" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="2">
+    NATIONAL TRADERS
+  </text>
+</svg>

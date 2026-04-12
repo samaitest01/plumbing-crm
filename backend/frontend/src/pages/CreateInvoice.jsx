@@ -1,0 +1,654 @@
+import { useEffect, useState } from "react";
+import PageWrapper from "../components/PageWrapper";
+import { fetchAllProducts, saveInvoice, fetchCustomers, createCustomer } from "../services/api";
+import logo from "../assets/national-traders-logo.svg";
+
+
+export default function CreateInvoice() {
+  const MM_PER_INCH = 25.4;
+  const roundAmount = (value) => Math.round(Number(value) || 0);
+
+  const formatInch = (value) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric <= 0) return "";
+    return Number(numeric.toFixed(3)).toString();
+  };
+
+  const getVariantInchText = (variant) => {
+    if (variant?.size_inch) return String(variant.size_inch);
+    if (variant?.size_label) return String(variant.size_label);
+    const fallback = formatInch(Number(variant?.size_mm) / MM_PER_INCH);
+    return fallback ? `${fallback}"` : "";
+  };
+
+  const getVariantDisplayLabel = (variant) => {
+    const inch = getVariantInchText(variant);
+    return inch ? `${variant.size_mm} mm / ${inch}` : `${variant.size_mm} mm`;
+  };
+
+  const shop = {
+    name: "National Traders",
+    address: "Behind High School Ground, Pathri - 431506",
+    owner: "Mujahid Shaikh",
+    mobile: "9595918751"
+  };
+
+  const [systems, setSystems] = useState([]);
+  const [variants, setVariants] = useState([]);
+  const [items, setItems] = useState([]);
+  const [customers, setCustomers] = useState([]);
+
+  const [customerName, setCustomerName] = useState("");
+  const [customerMobile, setCustomerMobile] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState("");
+
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [productId, setProductId] = useState("");
+  const [productName, setProductName] = useState("");
+  const [productSearch, setProductSearch] = useState("");
+  const [sizeMM, setSizeMM] = useState("");
+  const [qty, setQty] = useState("");
+  const [lineDiscount, setLineDiscount] = useState("");
+  const [editId, setEditId] = useState(null);
+  const [duplicateHighlightId, setDuplicateHighlightId] = useState(null);
+
+  // Invoice metadata set after successful save.
+  // invoiceNumber is the business-facing number and must match PDF.
+  const [invoiceId, setInvoiceId] = useState(null);
+  const [invoiceNumber, setInvoiceNumber] = useState(null);
+  const [invoiceDate, setInvoiceDate] = useState(null);
+  
+  // 💳 MOCKED PAYMENT FIELDS (For Record Keeping Only)
+  const [paymentStatus, setPaymentStatus] = useState("Pending");
+  const [paymentMode, setPaymentMode] = useState("");
+  const [amountRecorded, setAmountRecorded] = useState(0);
+
+  const resetInvoiceItems = () => {
+    setItems([]);
+    setEditId(null);
+    setSelectedCategory("");
+    setProductId("");
+    setProductName("");
+    setProductSearch("");
+    setVariants([]);
+    setSizeMM("");
+    setQty("");
+    setLineDiscount("");
+    setPaymentStatus("Pending");
+    setPaymentMode("");
+    setAmountRecorded(0);
+  };
+
+  useEffect(() => {
+    fetchAllProducts().then(r => setSystems(r.data || []));
+    fetchCustomers().then(r => setCustomers(r.data || []));
+  }, []);
+
+
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+    setProductId("");
+    setProductName("");
+    setProductSearch("");
+    setVariants([]);
+    setSizeMM("");
+  };
+
+  const handleProductSelect = (productIdValue) => {
+    setProductId(productIdValue);
+
+    const all = selectedCategory
+      ? systems.find(s => s.system === selectedCategory)?.products || []
+      : systems.flatMap(s => s.products || []);
+    const p = all.find(x => x.id === productIdValue);
+
+    if (p) {
+      setProductName(p.name);
+      setProductSearch(p.name);
+      setVariants(p.variants);
+      setSizeMM("");
+    } else {
+      setProductName("");
+      setProductSearch("");
+      setVariants([]);
+      setSizeMM("");
+    }
+  };
+
+  const selectedVariant = variants.find(v => String(v.size_mm) === sizeMM);
+
+  const price = selectedVariant?.price || 0;
+
+  const handleAddOrUpdate = () => {
+    if (!productId || !sizeMM || !qty) return;
+
+    const selectedSizeLabel = String(selectedVariant?.size_inch || selectedVariant?.size_label || selectedVariant?.size_mm || sizeMM || "").trim().toLowerCase();
+    const duplicateItem = items.find(i => {
+      if (editId && i.id === editId) return false;
+      const existingSizeLabel = (i.sizeInch || i.sizeLabel || String(i.sizeMM || "")).trim().toLowerCase();
+      return i.productId === productId && existingSizeLabel === selectedSizeLabel;
+    });
+
+    if (duplicateItem) {
+      setDuplicateHighlightId(duplicateItem.id);
+      alert("This product with the same size is already added. Please edit the existing row.");
+      setTimeout(() => setDuplicateHighlightId(null), 2000);
+      return;
+    }
+
+    const discountPct = Number(lineDiscount) || 0;
+    const base = qty * price;
+    const amount = base - (base * discountPct) / 100;
+
+    const item = {
+      id: editId || Date.now(),
+      productId,
+      productName,
+      sizeMM: selectedVariant?.size_mm ?? (Number(sizeMM) || 0),
+      sizeInch: selectedVariant?.size_inch || selectedVariant?.size_label || undefined,
+      sizeLabel: selectedVariant?.size_label || undefined,
+      qty: Number(qty),
+      price,
+      discount: discountPct,
+      baseAmount: base,
+      amount
+    };
+
+    setItems(
+      editId
+        ? items.map(i => (i.id === editId ? item : i))
+        : [...items, item]
+    );
+
+    setEditId(null);
+    setSelectedCategory("");
+    setProductId("");
+    setProductName("");
+    setProductSearch("");
+    setVariants([]);
+    setSizeMM("");
+    setQty("");
+    setLineDiscount("");
+  };
+
+  const handleEdit = i => {
+    setEditId(i.id);
+    setProductId(i.productId);
+    setProductName(i.productName);
+    setProductSearch(i.productName);
+    setSizeMM(String(i.sizeMM));
+    setQty(i.qty);
+    setLineDiscount(i.discount);
+
+    const all = systems.flatMap(s => s.products || []);
+    const p = all.find(x => x.id === i.productId);
+    if (p) {
+      setVariants(p.variants);
+      // Find and set the category
+      const system = systems.find(s => s.products.some(prod => prod.id === i.productId));
+      if (system) {
+        setSelectedCategory(system.system);
+      }
+    }
+  };
+
+
+  const handleCustomerSelect = e => {
+    const mobile = e.target.value;
+    setSelectedCustomer(mobile);
+    if (mobile) {
+      const customer = customers.find(c => c.mobile === mobile);
+      if (customer) {
+        setCustomerName(customer.name);
+        setCustomerMobile(customer.mobile);
+      }
+    } else {
+      setCustomerName("");
+      setCustomerMobile("");
+    }
+  };
+  const handleDelete = id => {
+    setItems(items.filter(i => i.id !== id));
+  };
+
+  const allProducts = selectedCategory
+    ? systems.find(s => s.system === selectedCategory)?.products || []
+    : systems.flatMap(s => s.products || []);
+  const filteredProducts = productSearch
+    ? allProducts.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()))
+    : allProducts;
+
+  const totalPrice = items.reduce((s, i) => s + i.baseAmount, 0);
+  const totalAmount = items.reduce((s, i) => s + i.amount, 0);
+  const roundedTotalPrice = roundAmount(totalPrice);
+  const roundedTotalAmount = roundAmount(totalAmount);
+  const totalDiscount = roundedTotalPrice - roundedTotalAmount;
+
+  const handleSave = async () => {
+    if (customerMobile.length !== 10) {
+      alert("Mobile number must be 10 digits");
+      return;
+    }
+
+    try {
+      // Check if customer already exists
+      const customerExists = customers.some(c => c.mobile === customerMobile);
+      
+      // If customer doesn't exist, create them
+      if (!customerExists) {
+        try {
+          await createCustomer({ name: customerName, mobile: customerMobile });
+          console.log("✅ Customer created successfully");
+          // Refresh customer list
+          const updatedCustomers = await fetchCustomers();
+          setCustomers(updatedCustomers.data || []);
+        } catch (customerErr) {
+          console.error("❌ Customer creation error:", customerErr.response?.data || customerErr.message);
+          alert("Customer creation failed: " + (customerErr.response?.data?.error || customerErr.message));
+          return;
+        }
+      } else {
+        console.log("✅ Customer already exists");
+      }
+
+      // Save invoice and rely on backend for final business invoice number generation.
+      const recordedAmount = Math.min(Math.max(roundAmount(amountRecorded), 0), roundedTotalAmount);
+      const balanceAmount = Math.max(roundedTotalAmount - recordedAmount, 0);
+      const calculatedPaymentStatus = balanceAmount === 0 ? "Recorded" : "Pending";
+
+      const res = await saveInvoice({
+        customerName,
+        customerMobile,
+        items,
+        subTotal: roundedTotalPrice,
+        total: roundedTotalAmount,
+        paymentStatus: calculatedPaymentStatus,
+        paymentMode,
+        amountRecorded: recordedAmount,
+        balanceAmount
+      });
+
+      resetInvoiceItems();
+      setInvoiceId(res.data._id);
+      setInvoiceNumber(res.data.invoiceNumber || null);
+      setInvoiceDate(res.data.createdAt);
+      alert("Invoice saved successfully");
+      console.log("✅ Invoice saved:", res.data);
+    } catch (err) {
+      console.error("❌ Error saving invoice:", err.response?.data || err.message);
+      alert(err.response?.data?.error || "Failed to save invoice");
+    }
+  };
+
+  const handlePrint = async () => {
+    // Print flow is PDF-first so printed output exactly matches generated invoice PDF.
+    if (!invoiceId) {
+      alert("Please save invoice first, then print the PDF version.");
+      return;
+    }
+
+    const pdfUrl = `${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"}/api/invoices/${invoiceId}/pdf`;
+
+    try {
+      const response = await fetch(pdfUrl);
+      if (!response.ok) {
+        throw new Error("Failed to load invoice PDF");
+      }
+
+      const pdfBlob = await response.blob();
+      const blobUrl = URL.createObjectURL(pdfBlob);
+
+      const printFrame = document.createElement("iframe");
+      printFrame.style.position = "fixed";
+      printFrame.style.right = "0";
+      printFrame.style.bottom = "0";
+      printFrame.style.width = "0";
+      printFrame.style.height = "0";
+      printFrame.style.border = "0";
+      printFrame.src = blobUrl;
+
+      const cleanup = () => {
+        setTimeout(() => {
+          URL.revokeObjectURL(blobUrl);
+          if (printFrame.parentNode) {
+            printFrame.parentNode.removeChild(printFrame);
+          }
+        }, 1500);
+      };
+
+      printFrame.onload = () => {
+        const frameWindow = printFrame.contentWindow;
+        if (!frameWindow) {
+          cleanup();
+          return;
+        }
+        frameWindow.focus();
+        frameWindow.print();
+        cleanup();
+      };
+
+      document.body.appendChild(printFrame);
+    } catch (err) {
+      console.error("❌ Print PDF error:", err);
+      alert("Failed to print invoice PDF. Please try the PDF button.");
+    }
+  };
+  return (
+    <PageWrapper>
+
+      {/* HEADER */}
+      <div className="invoice-header">
+        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+          <img src={logo} alt="National Traders" style={{ width: "48px", height: "48px", borderRadius: "50%" }} />
+          <div>
+          <b>{shop.name}</b><br />
+          {shop.address}
+          </div>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          {shop.owner}<br />{shop.mobile}
+        </div>
+      </div>
+
+      <hr />
+
+      {/* INVOICE META */}
+      <div className="flex-row-between">
+        <div>
+          <b>Invoice No:</b>{" "}
+          {invoiceNumber || "-"}
+        </div>
+        <div>
+          <b>Date:</b>{" "}
+          {invoiceDate ? new Date(invoiceDate).toDateString() : "-"}
+        </div>
+      </div>
+
+      <hr />
+
+      {/* CUSTOMER */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1rem", marginBottom: "1rem" }}>
+        <div>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Select Customer</label>
+          <select value={selectedCustomer} onChange={handleCustomerSelect} className="form-select" style={{ width: "100%" }}>
+            <option value="">-- Select Customer --</option>
+            {customers.map(c => (
+              <option key={c.mobile} value={c.mobile}>
+                {c.name} ({c.mobile})
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        <div style={{ textAlign: "center", color: "#666", fontSize: "14px", fontWeight: "500" }}>OR</div>
+        
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem" }}>
+          <div>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Name</label>
+            <input
+              placeholder="Name"
+              value={customerName}
+              onChange={e => {
+                setCustomerName(e.target.value.replace(/[^a-zA-Z ]/g, ""));
+                setSelectedCustomer("");
+              }}
+              className="form-input"
+              style={{ width: "100%" }}
+            />
+          </div>
+          <div>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Mobile</label>
+            <input
+              placeholder="Mobile"
+              maxLength={10}
+              value={customerMobile}
+              onChange={e => {
+                setCustomerMobile(e.target.value.replace(/[^0-9]/g, ""));
+                setSelectedCustomer("");
+              }}
+              className="form-input"
+              style={{ width: "100%" }}
+            />
+          </div>
+        </div>
+      </div>
+
+      <hr />
+
+      {/* PRODUCT FORM */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem", marginBottom: "1rem", alignItems: "flex-end" }}>
+        <div>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Category</label>
+          <select
+            value={selectedCategory}
+            onChange={e => handleCategoryChange(e.target.value)}
+            className="form-select"
+            style={{ width: "100%" }}
+          >
+            <option value="">All Categories</option>
+            {systems.map((system, idx) => (
+              <option key={`${system.system}-${idx}`} value={system.system}>
+                {system.category}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Product</label>
+          <select
+            value={productId}
+            onChange={e => handleProductSelect(e.target.value)}
+            className="form-select"
+            style={{ width: "100%" }}
+          >
+            <option value="">-- Select Product --</option>
+            {filteredProducts.map(p => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Size</label>
+          <select value={sizeMM} onChange={e => setSizeMM(e.target.value)} className="form-select" style={{ width: "100%" }}>
+            <option value="">Size</option>
+            {variants.map(v =>
+              <option key={`${v.size_mm}-${v.size_inch || v.size_label || ""}`} value={String(v.size_mm)}>
+                {getVariantDisplayLabel(v)}
+              </option>
+            )}
+          </select>
+        </div>
+
+        <div>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Qty</label>
+          <input placeholder="Qty" value={qty} onChange={e => setQty(e.target.value)} className="form-input" style={{ width: "100%" }} />
+        </div>
+        
+        <div>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Disc %</label>
+          <input placeholder="Disc %" value={lineDiscount} onChange={e => setLineDiscount(e.target.value)} className="form-input" style={{ width: "100%" }} />
+        </div>
+
+        <button onClick={handleAddOrUpdate} style={{ height: "36px" }}>{editId ? "Update" : "Add"}</button>
+      </div>
+
+      {/* TABLE */}
+      <div className="table-responsive" style={{ marginTop: "2rem", marginBottom: "2rem" }}>
+        <table style={{ borderCollapse: "collapse", width: "100%" }}>
+          <thead>
+            <tr>
+              {["Sl. No", "Product", "Size", "Qty", "Rate", "Disc%", "Amount", "Action"].map(h => (
+                <th
+                  key={h}
+                  style={{
+                    border: "2px solid #333",
+                    padding: "10px",
+                    backgroundColor: "#f5f5f5",
+                    fontWeight: "600",
+                    textAlign: h === "Product" ? "left" : "center",
+                    minWidth: h === "Product" ? "200px" : "60px"
+                  }}
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {items.length === 0 ? (
+              <tr>
+                <td colSpan="8" style={{ border: "1px solid #ccc", padding: "20px", textAlign: "center", color: "#999" }}>
+                  No products added yet
+                </td>
+              </tr>
+            ) : (
+              items.map((i, index) => (
+                <tr
+                  key={i.id}
+                  style={{
+                    backgroundColor: duplicateHighlightId === i.id ? "#fff3cd" : "transparent",
+                    transition: "background-color 0.3s ease"
+                  }}
+                >
+                  <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>{index + 1}</td>
+                  <td style={{ border: "1px solid #ccc", padding: "10px" }}>{i.productName}</td>
+                  <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>
+                    {`${i.sizeMM} mm / ${i.sizeInch || i.sizeLabel || `${formatInch(Number(i.sizeMM) / MM_PER_INCH)}"`}`}
+                  </td>
+                  <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>{i.qty}</td>
+                  <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "right" }}>₹{Number(i.price || 0).toFixed(2)}</td>
+                  <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>{i.discount}%</td>
+                  <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "right", fontWeight: "600" }}>₹{Number(i.amount || 0).toFixed(2)}</td>
+                  <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>
+                    <button onClick={() => handleEdit(i)} style={{ padding: "4px 8px", marginRight: "4px" }}>✏️</button>
+                    <button onClick={() => handleDelete(i.id)} style={{ padding: "4px 8px" }}>❌</button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* TOTALS */}
+      <div style={{ 
+        display: "flex", 
+        justifyContent: "flex-end", 
+        marginBottom: "2rem",
+        marginTop: "2rem"
+      }}>
+        <div style={{ width: "100%", maxWidth: "400px", textAlign: "right" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "14px" }}>
+            <span>Total Price (Gross):</span>
+            <span style={{ fontWeight: "600" }}>₹{roundedTotalPrice}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "14px" }}>
+            <span>Total Discount:</span>
+            <span style={{ fontWeight: "600" }}>₹{roundAmount(totalDiscount)}</span>
+          </div>
+          <div style={{ 
+            display: "flex",
+            justifyContent: "space-between",
+            marginBottom: "1rem", 
+            fontSize: "16px", 
+            fontWeight: "bold",
+            paddingTop: "0.5rem",
+            borderTop: "2px solid #333"
+          }}>
+            <span>Final Amount (Taxable):</span>
+            <span style={{ color: "#2563eb" }}>₹{roundedTotalAmount}</span>
+          </div>
+        </div>
+      </div>
+
+      <hr />
+
+      {/* PAYMENT SECTION - MOCKED (For Record Keeping Only) */}
+      <h3 style={{ marginBottom: "1rem", fontSize: "16px", fontWeight: "bold" }}>
+        Record Keeping Details
+        <span style={{ fontSize: "12px", color: "#666", fontWeight: "normal", marginLeft: "10px" }}>
+          (Information only - no actual payment processing)
+        </span>
+      </h3>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1.5rem", marginBottom: "1rem" }}>
+        <div>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", fontSize: "14px" }}>Payment Status</label>
+          <select value={paymentStatus} onChange={e => {
+            setPaymentStatus(e.target.value);
+            if (e.target.value === "Recorded") {
+              setAmountRecorded(roundedTotalAmount);
+            } else {
+              setAmountRecorded(0);
+            }
+          }} className="form-select" style={{ width: "100%" }}>
+            <option value="Pending">Partial</option>
+            <option value="Recorded">Paid</option>
+          </select>
+        </div>
+        
+        <div>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", fontSize: "14px" }}>Payment Mode</label>
+          <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)} className="form-select" style={{ width: "100%" }}>
+            <option value="">-- Select Mode --</option>
+            <option value="Cash">Cash</option>
+            <option value="UPI">UPI</option>
+            <option value="Card">Card</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", fontSize: "14px" }}>
+            Amount Paid
+          </label>
+          <input 
+            type="number" 
+            value={amountRecorded} 
+            onChange={e => setAmountRecorded(Number(e.target.value))}
+            placeholder="0"
+            min="0"
+            max={roundedTotalAmount}
+            className="form-input"
+            style={{ width: "100%" }}
+          />
+        </div>
+
+        <div>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", fontSize: "14px" }}>
+            Balance Amount
+          </label>
+          <input 
+            type="number" 
+            value={Math.max(roundedTotalAmount - roundAmount(amountRecorded), 0)}
+            disabled
+            className="form-input"
+            style={{ width: "100%", backgroundColor: "#f5f5f5", cursor: "not-allowed" }}
+          />
+        </div>
+      </div>
+
+      <hr />
+
+      <div className="buttons-container">
+        <button onClick={handleSave}>Save Invoice</button>
+        {invoiceId && (
+          <a
+            href={`${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"}/api/invoices/${invoiceId}/pdf`}
+            target="_blank"
+            style={{ flex: 1, minWidth: 100 }}
+          >
+            <button>PDF</button>
+          </a>
+        )}
+        <button onClick={handlePrint} disabled={!invoiceId} title={!invoiceId ? "Save invoice first" : "Print invoice PDF"}>
+          Print
+        </button>
+      </div>
+
+    </PageWrapper>
+  );
+}

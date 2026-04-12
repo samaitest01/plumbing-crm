@@ -4,8 +4,6 @@ const Invoice = require("../models/Invoice");
 const Customer = require("../models/Customer");
 const { protect, allowRoles } = require("./auth.middleware");
 
-const roundAmount = (value) => Math.round(Number(value) || 0);
-
 // GET SALES TRENDS (Daily/Monthly)
 router.get("/sales-trends", protect, allowRoles("ADMIN"), async (req, res) => {
   try {
@@ -33,7 +31,7 @@ router.get("/sales-trends", protect, allowRoles("ADMIN"), async (req, res) => {
 
     const data = Object.entries(trends).map(([date, amount]) => ({
       date,
-      amount: roundAmount(amount)
+      amount: parseFloat(amount.toFixed(2))
     }));
 
     res.json(data);
@@ -57,7 +55,7 @@ router.get("/revenue-by-customer", protect, allowRoles("ADMIN"), async (req, res
     const data = Object.entries(revenueMap)
       .map(([name, revenue]) => ({
         name,
-        revenue: roundAmount(revenue)
+        revenue: parseFloat(revenue.toFixed(2))
       }))
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 10); // Top 10 customers
@@ -85,7 +83,7 @@ router.get("/revenue-by-product", protect, allowRoles("ADMIN"), async (req, res)
     const data = Object.entries(productMap)
       .map(([name, revenue]) => ({
         name,
-        revenue: roundAmount(revenue)
+        revenue: parseFloat(revenue.toFixed(2))
       }))
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 10);
@@ -104,27 +102,26 @@ router.get("/payment-status", protect, allowRoles("ADMIN"), async (req, res) => 
 
     const summary = {
       totalInvoices: invoices.length,
-      recordedCount: 0,
-      pendingCount: 0,
-      recordedAmount: 0,
+      paidCount: 0,
+      balanceCount: 0,
+      paidAmount: 0,
       pendingAmount: 0
     };
 
     invoices.forEach(inv => {
-      if (inv.paymentStatus === "Recorded") {
-        summary.recordedCount++;
-        summary.recordedAmount += inv.total || 0;
+      if (inv.paymentStatus === "Paid") {
+        summary.paidCount++;
+        summary.paidAmount += inv.total || 0;
       } else {
-        summary.pendingCount++;
-        summary.pendingAmount += (inv.total - (inv.amountRecorded || 0)) || 0;
+        summary.balanceCount++;
+        summary.pendingAmount += (inv.total - (inv.amountPaid || 0)) || 0;
       }
     });
 
     res.json({
       ...summary,
-      recordedAmount: roundAmount(summary.recordedAmount),
-      pendingAmount: roundAmount(summary.pendingAmount),
-      note: "Mock payment tracking - no actual payment processing"
+      paidAmount: parseFloat(summary.paidAmount.toFixed(2)),
+      pendingAmount: parseFloat(summary.pendingAmount.toFixed(2))
     });
   } catch (err) {
     console.error("Payment status error:", err);
@@ -171,11 +168,11 @@ router.get("/customer-metrics", protect, allowRoles("ADMIN"), async (req, res) =
       .slice(0, 5)
       .map(c => ({
         ...c,
-        revenue: roundAmount(c.revenue)
+        revenue: parseFloat(c.revenue.toFixed(2))
       }));
 
-    metrics.totalRevenue = roundAmount(metrics.totalRevenue);
-    metrics.averageOrderValue = roundAmount(metrics.averageOrderValue);
+    metrics.totalRevenue = parseFloat(metrics.totalRevenue.toFixed(2));
+    metrics.averageOrderValue = parseFloat(metrics.averageOrderValue.toFixed(2));
 
     res.json(metrics);
   } catch (err) {

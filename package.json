@@ -1,12 +1,19 @@
 {
-  "name": "plumbing-crm",
-  "private": true,
+  "name": "plumbing-crm-backend",
+  "version": "1.0.0",
+  "main": "server.js",
+  "type": "commonjs",
   "scripts": {
-    "start": "npm --prefix backend start",
-    "build": "npm --prefix frontend install && npm --prefix frontend run build",
-    "postinstall": "npm --prefix backend install && npm --prefix frontend install"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
   "dependencies": {
-    "react-router-dom": "^7.11.0"
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.1.2",
+    "pdfkit": "^0.17.2",
+    "xlsx": "^0.18.5"
   }
 }
